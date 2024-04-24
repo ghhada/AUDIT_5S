@@ -1,16 +1,14 @@
-# application
+# AUDIT_5S
 
-A new Flutter project.
+Ce projet est une application Flutter pour l'audit 5S.
 
-## Getting Started
+## Commencer
 
-This project is a starting point for a Flutter application.
+Voici quelques ressources pour vous aider à démarrer avec Flutter :
 
-A few resources to get you started if this is your first Flutter project:
+- [Lab: Écrire votre première application Flutter](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Exemples utiles de Flutter](https://docs.flutter.dev/cookbook)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Pour obtenir de l'aide pour commencer le développement avec Flutter, consultez la
+[documentation en ligne](https://docs.flutter.dev/), qui propose des tutoriels,
+des exemples, des conseils pour le développement mobile, et une référence complète de l'API.
