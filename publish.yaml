@@ -1,0 +1,3 @@
+flutter_web:
+  name: application
+  target: build/web
