@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "695589450467",
+    "firebase_url": "https://application5s-default-rtdb.firebaseio.com",
+    "project_id": "application5s",
+    "storage_bucket": "application5s.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:695589450467:android:bdc77023bfcd6934b04bd6",
+        "android_client_info": {
+          "package_name": "com.example.application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHy9hjSeqksGqVqWjuPIEOwpPlwZ0an3c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
