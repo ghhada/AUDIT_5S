@@ -108,8 +108,71 @@ class _IlotsEtatsState extends State<IlotsEtats> {
   }
 
   void _ajouterIlot() {
-    // Ajoutez ici la logique pour ajouter un nouvel îlot
+    TextEditingController _nomController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Ajouter un nouvel îlot'),
+          content: TextField(
+            controller: _nomController,
+            decoration: InputDecoration(
+              labelText: 'Nom de l\'îlot',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                String nouveauNom = _nomController.text.trim();
+                if (nouveauNom.isNotEmpty) {
+                  // Ajoutez ici la logique pour ajouter un nouvel îlot
+                  final databaseReference = FirebaseDatabase.instance.reference().child('ilots');
+                  String nouvelEtat = 'non certifié'; // État par défaut pour le nouvel îlot
+
+                  databaseReference.push().set({
+                    'nom': nouveauNom,
+                    'etat': nouvelEtat,
+                  }).then((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Nouvel îlot ajouté avec succès"),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    Navigator.of(context).pop(); // Fermer la boîte de dialogue après l'ajout
+                  }).catchError((error) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Erreur lors de l'ajout de l'îlot"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  });
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Veuillez saisir le nom de l'îlot"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: Text('Ajouter'),
+            ),
+          ],
+        );
+      },
+    );
   }
+
+
 }
 
 class IlotCard extends StatefulWidget {
