@@ -103,7 +103,9 @@ class _IlotsEtatsState extends State<IlotsEtats> {
         onPressed: _ajouterIlot,
         tooltip: 'Ajouter un ilot',
         child: Icon(Icons.add),
+        backgroundColor: Colors.orange, // Modifier la couleur du bouton flottant en orange
       ),
+      backgroundColor: Color(0xFF060D3A), // Modifier la couleur de l'arrière-plan
     );
   }
 
@@ -171,8 +173,6 @@ class _IlotsEtatsState extends State<IlotsEtats> {
       },
     );
   }
-
-
 }
 
 class IlotCard extends StatefulWidget {
@@ -204,63 +204,64 @@ class _IlotCardState extends State<IlotCard> {
     return Card(
       elevation: 4,
       margin: EdgeInsets.all(8),
+      color: Color(0xFF232D61), // Modifier la couleur de la carte
       child: Padding(
-      padding: EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            'Nom d\'ilot: ${widget.ilot.nom}',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Roboto'),
-          ),
-          SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            children: [
-              ChoiceChip(
-                label: Text('Certifié'),
-                selected: selectedEtat == 'certifié',
-                onSelected: (bool selected) {
-                  if (selected) {
-                    setState(() => selectedEtat = 'certifié');
-                    widget.onUpdate('certifié');
-                  }
-                },
-                selectedColor: Colors.green, // Couleur différente pour les états choisis
-              ),
-              ChoiceChip(
-                label: Text('En cours'),
-                selected: selectedEtat == 'en cours',
-                onSelected: (bool selected) {
-                  if (selected) {
-                    setState(() => selectedEtat = 'en cours');
-                    widget.onUpdate('en cours');
-                  }
-                },
-                selectedColor: Colors.blue, // Couleur différente pour les états choisis
-              ),
-              ChoiceChip(
-                label: Text('Non certifié'),
-                selected: selectedEtat == 'non certifié',
-                onSelected: (bool selected) {
-                  if (selected) {
-                    setState(() => selectedEtat = 'non certifié');
-                    widget.onUpdate('non certifié');
-                  }
-                },
-                selectedColor: Colors.red, // Couleur différente pour les états choisis
-              ),
-            ],
-          ),
-          SizedBox(height: 10),
-          IconButton(
-            icon: Icon(Icons.delete_outline),
-            onPressed: widget.onDelete,
-            color: Colors.red,
-          ),
-        ],
+        padding: EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Nom d\'ilot: ${widget.ilot.nom}',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Roboto', color: Colors.white), // Modifier la couleur du texte
+            ),
+            SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              children: [
+                ChoiceChip(
+                  label: Text('Certifié'),
+                  selected: selectedEtat == 'certifié',
+                  onSelected: (bool selected) {
+                    if (selected) {
+                      setState(() => selectedEtat = 'certifié');
+                      widget.onUpdate('certifié');
+                    }
+                  },
+                  selectedColor: Colors.green, // Couleur différente pour les états choisis
+                ),
+                ChoiceChip(
+                  label: Text('En cours'),
+                  selected: selectedEtat == 'en cours',
+                  onSelected: (bool selected) {
+                    if (selected) {
+                      setState(() => selectedEtat = 'en cours');
+                      widget.onUpdate('en cours');
+                    }
+                  },
+                  selectedColor: Colors.orange, // Couleur différente pour les états choisis
+                ),
+                ChoiceChip(
+                  label: Text('Non certifié'),
+                  selected: selectedEtat == 'non certifié',
+                  onSelected: (bool selected) {
+                    if (selected) {
+                      setState(() => selectedEtat = 'non certifié');
+                      widget.onUpdate('non certifié');
+                    }
+                  },
+                  selectedColor: Colors.red, // Couleur différente pour les états choisis
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            IconButton(
+              icon: Icon(Icons.delete_outline),
+              onPressed: widget.onDelete,
+              color: Colors.red,
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 }

@@ -3,9 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-// Créez une classe pour représenter un auditeur avec ses données
 class Auditeur {
-  late String key; // Clé d'identification dans la base de données Firebase
+  late String key;
   String nom;
   String email;
   String service;
@@ -297,7 +296,9 @@ class _AuditeursListWidgetState extends State<AuditeursListWidget> {
         onPressed: _ajouterAuditeur,
         tooltip: 'Ajouter un auditeur',
         child: Icon(Icons.add),
+        backgroundColor: Colors.orange,
       ),
+      backgroundColor: Color(0xFF060D3A),
     );
   }
 }
@@ -355,7 +356,6 @@ class AuditeurCard extends StatelessWidget {
             Text(
               'Service: ${auditeur.service}',
               style: TextStyle(
-                fontStyle: FontStyle.italic,
                 color: textColor.withOpacity(0.8),
               ),
             ),
@@ -365,13 +365,11 @@ class AuditeurCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: Icon(Icons.edit),
-              color: textColor,
+              icon: Icon(Icons.edit, color: Colors.orange), // Modifier icône en orange
               onPressed: onEdit,
             ),
             IconButton(
-              icon: Icon(Icons.delete),
-              color: textColor,
+              icon: Icon(Icons.delete, color: Colors.orange), // Supprimer icône en orange
               onPressed: onDelete,
             ),
           ],

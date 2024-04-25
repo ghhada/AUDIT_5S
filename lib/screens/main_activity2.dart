@@ -33,70 +33,99 @@ class MainActivity2 extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => Login()),
                 );
               },
-              child: Text('ADMIN'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange, // Couleur de fond du bouton ADMIN
+              ),
+              child: SizedBox(
+                width: 150,
+                height: 50,
+                child: Center(
+                  child: Text('admin', style: TextStyle(color: Colors.white)),
+                ),
+              ),
             ),
           ),
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                SizedBox(
-                  width: 200, // Largeur prédéfinie du bouton
-                  height: 50, // Hauteur prédéfinie du bouton
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Navigate to the page defined by Button1
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => Button1Page()),
-                      );
-                    },
-                    child: Text('5S'),
+                ElevatedButton(
+                  onPressed: () {
+                    // Navigate to the page defined by Button1
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Button1Page()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange, // Couleur de fond du bouton 5S
+                  ),
+                  child: SizedBox(
+                    width: 150,
+                    height: 50,
+                    child: Center(
+                      child: Text('5S', style: TextStyle(color: Colors.white)),
+                    ),
                   ),
                 ),
                 SizedBox(height: 10.0), // Add spacing between buttons
-                SizedBox(
-                  width: 200, // Largeur prédéfinie du bouton
-                  height: 50, // Hauteur prédéfinie du bouton
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Navigate to the page defined by Button2
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => Button2Page()),
-                      );
-                    },
-                    child: Text('Plan d action'),
+                ElevatedButton(
+                  onPressed: () {
+                    // Navigate to the page defined by Button2
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Button2Page()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange, // Couleur de fond du bouton Plan d'action
+                  ),
+                  child: SizedBox(
+                    width: 150,
+                    height: 50,
+                    child: Center(
+                      child: Text('Plan d action', style: TextStyle(color: Colors.white)),
+                    ),
                   ),
                 ),
                 SizedBox(height: 10.0), // Add spacing between buttons
-                SizedBox(
-                  width: 200, // Largeur prédéfinie du bouton
-                  height: 50, // Hauteur prédéfinie du bouton
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Navigate to the page defined by Button3
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => Button3Page()),
-                      );
-                    },
-                    child: Text('   KPI   '),
+                ElevatedButton(
+                  onPressed: () {
+                    // Navigate to the page defined by Button3
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Button3Page()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange, // Couleur de fond du bouton KPI
+                  ),
+                  child: SizedBox(
+                    width: 150,
+                    height: 50,
+                    child: Center(
+                      child: Text('KPI', style: TextStyle(color: Colors.white)),
+                    ),
                   ),
                 ),
                 SizedBox(height: 10.0), // Add spacing between buttons
-                SizedBox(
-                  width: 200, // Largeur prédéfinie du bouton
-                  height: 50, // Hauteur prédéfinie du bouton
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Navigate to the page defined by Button4
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => Button4Page()),
-                      );
-                    },
-                    child: Text('Assessment'),
+                ElevatedButton(
+                  onPressed: () {
+                    // Navigate to the page defined by Button4
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Button4Page()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange, // Couleur de fond du bouton Assessment
+                  ),
+                  child: SizedBox(
+                    width: 150,
+                    height: 50,
+                    child: Center(
+                      child: Text('Assessment', style: TextStyle(color: Colors.white)),
+                    ),
                   ),
                 ),
               ],

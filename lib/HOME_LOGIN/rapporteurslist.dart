@@ -294,7 +294,9 @@ class _RapporteursListState extends State<RapporteursList> {
         onPressed: _ajouterRapporteur,
         tooltip: 'Ajouter un rapporteur',
         child: Icon(Icons.add),
+        backgroundColor: Colors.orange, // Modifier la couleur du bouton flottant en orange
       ),
+      backgroundColor: Color(0xFF060D3A), // Modifier la couleur de l'arrière-plan
     );
   }
 }
@@ -350,9 +352,8 @@ class RapporteurCard extends StatelessWidget {
               style: TextStyle(color: textColor),
             ),
             Text(
-              'Domaine: ${rapporteur.domaine}',
+              'Service: ${rapporteur.domaine}',
               style: TextStyle(
-                fontStyle: FontStyle.italic,
                 color: textColor.withOpacity(0.8),
               ),
             ),
@@ -362,13 +363,11 @@ class RapporteurCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: Icon(Icons.edit),
-              color: textColor,
+              icon: Icon(Icons.edit, color: Colors.orange), // Modifier icône en orange
               onPressed: onEdit,
             ),
             IconButton(
-              icon: Icon(Icons.delete),
-              color: textColor,
+              icon: Icon(Icons.delete, color: Colors.orange), // Supprimer icône en orange
               onPressed: onDelete,
             ),
           ],
