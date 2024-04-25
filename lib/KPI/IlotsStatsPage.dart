@@ -104,13 +104,14 @@ class _AllDataPageState extends State<AllDataPage> {
           }
         },
         labelAccessorFn: (Ilot ilot, _) => '${ilot.key}: ${ilot.etat}',
-        // Définir le BarLabelDecorator avec le labelStyle noir
+        // Définir le BarLabelDecorator avec le labelStyle blanc
         insideLabelStyleAccessorFn: (Ilot ilot, _) {
-          final color = charts.ColorUtil.fromDartColor(Colors.black);
+          final color = charts.ColorUtil.fromDartColor(Colors.white);
           return charts.TextStyleSpec(color: color);
         },
       ),
     ];
+
   }
 
   List<fl.PieChartSectionData> _createDataFLChart() {
@@ -157,7 +158,7 @@ class _AllDataPageState extends State<AllDataPage> {
       return Center(
         child: Text(
           'No data available',
-          style: TextStyle(fontSize: 16.0),
+          style: TextStyle(fontSize: 16.0, color: Colors.white), // Texte en blanc
         ),
       );
     } else {
@@ -167,19 +168,52 @@ class _AllDataPageState extends State<AllDataPage> {
           children: [
             Expanded(
               child: SizedBox(
-                height: 300, // Height of the BarChart
+                height: 300, // Hauteur du BarChart
                 child: charts.BarChart(
                   _createDataChartsFlutter(),
                   animate: true,
-                  barGroupingType: charts.BarGroupingType.grouped, // Adjust bar width
-                  barRendererDecorator: charts.BarLabelDecorator<String>(),
-                  domainAxis: charts.OrdinalAxisSpec(),
+                  barGroupingType: charts.BarGroupingType.grouped, // Ajuster la largeur de la barre
+                  // Définir le BarLabelDecorator pour afficher les étiquettes à l'extérieur des barres
+                  barRendererDecorator: charts.BarLabelDecorator<String>(
+                    labelPosition: charts.BarLabelPosition.outside,
+                    labelAnchor: charts.BarLabelAnchor.end,
+                    outsideLabelStyleSpec: charts.TextStyleSpec(
+                      fontSize: 12,
+                      color: charts.ColorUtil.fromDartColor(Colors.white), // Texte en blanc
+                    ),
+                  ),
+                  domainAxis: charts.OrdinalAxisSpec(
+                    renderSpec: charts.SmallTickRendererSpec(
+                      // Style des étiquettes de l'axe des domaines
+                      labelStyle: charts.TextStyleSpec(
+                        fontSize: 14,
+                        color: charts.ColorUtil.fromDartColor(Colors.white), // Texte en blanc
+                      ),
+                      // Style des lignes de la grille
+                      lineStyle: charts.LineStyleSpec(
+                        color: charts.ColorUtil.fromDartColor(Colors.white.withOpacity(0.5)), // Couleur de la ligne de grille
+                      ),
+                    ),
+                  ),
+                  primaryMeasureAxis: charts.NumericAxisSpec(
+                    renderSpec: charts.GridlineRendererSpec(
+                      // Style des nombres sur l'axe des ordonnées
+                      labelStyle: charts.TextStyleSpec(
+                        fontSize: 14,
+                        color: charts.ColorUtil.fromDartColor(Colors.white), // Texte en blanc
+                      ),
+                      // Style des lignes de la grille
+                      lineStyle: charts.LineStyleSpec(
+                        color: charts.ColorUtil.fromDartColor(Colors.white.withOpacity(0.5)), // Couleur de la ligne de grille
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
             Expanded(
               child: SizedBox(
-                height: 300, // Height of the PieChart
+                height: 300, // Hauteur du PieChart
                 child: Stack(
                   children: [
                     AspectRatio(
@@ -193,7 +227,6 @@ class _AllDataPageState extends State<AllDataPage> {
                         ),
                       ),
                     ),
-
                   ],
                 ),
               ),
@@ -204,6 +237,7 @@ class _AllDataPageState extends State<AllDataPage> {
     }
   }
 
+
   Widget _buildChartLabel(String label, double percentage) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -213,18 +247,19 @@ class _AllDataPageState extends State<AllDataPage> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
+            color: Colors.white, // Texte en blanc
           ),
         ),
         Text(
           '${percentage.toStringAsFixed(2)}%',
           style: TextStyle(
             fontSize: 16,
+            color: Colors.white, // Texte en blanc
           ),
         ),
       ],
     );
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -233,22 +268,28 @@ class _AllDataPageState extends State<AllDataPage> {
       ),
       body: ilots.isEmpty
           ? Center(child: CircularProgressIndicator())
-          : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Graphiques des Ilots',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
-            _buildChartWidget(),
-          ],
+          : Container(
+        color: Color(0xFF060D3A),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Graphiques des Ilots',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              SizedBox(height: 20),
+              _buildChartWidget(),
+            ],
+          ),
         ),
       ),
     );
   }
+
+
+
 }
 
 void main() async {
