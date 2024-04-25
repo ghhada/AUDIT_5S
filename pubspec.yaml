@@ -16,7 +16,7 @@ dependencies:
   fl_chart: ^0.67.0
   syncfusion_flutter_charts: ^21.2.4
   firebase_analytics: ^10.10.3
-
+  shared_preferences: ^2.2.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

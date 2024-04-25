@@ -206,20 +206,22 @@ class _TableauAuditState extends State<TableauAudit> {
     List<String> actionsList = [];
     List<String> responsablesList = [];
     List<String> datesLimitesList = [];
+    List<String> etatActionsList = []; // New list to store default action states
 
     // Parcourir les réponses pour chaque ligne du tableau
     for (int i = 0; i < _actions.length; i++) {
       // Vérifier si une action a été renseignée pour cette ligne
       if (_actions[i] != null) {
-        actionsList.add('action${i+1}: ${_actions[i]}');
+        actionsList.add('action${i + 1}: ${_actions[i]}');
+        etatActionsList.add('etatAction${i + 1}: En cours'); // Ajouter l'état par défaut
       }
       // Vérifier si un responsable a été renseigné pour cette ligne
       if (_responsables[i] != null) {
-        responsablesList.add('responsable${i+1}: ${_responsables[i]}');
+        responsablesList.add('responsable${i + 1}: ${_responsables[i]}');
       }
       // Vérifier si une date limite a été renseignée pour cette ligne
       if (_datesLimites[i] != null) {
-        datesLimitesList.add('dateLimite${i+1}: ${_datesLimites[i]!.toIso8601String()}');
+        datesLimitesList.add('dateLimite${i + 1}: ${_datesLimites[i]!.toIso8601String()}');
       }
     }
 
@@ -229,9 +231,10 @@ class _TableauAuditState extends State<TableauAudit> {
       'date': widget.date,
       'heure': widget.heure,
       'ilot': widget.ilot,
-      ...actionsList.asMap().map((i, action) => MapEntry('action${i+1}', action)),
-      ...responsablesList.asMap().map((i, responsable) => MapEntry('responsable${i+1}', responsable)),
-      ...datesLimitesList.asMap().map((i, dateLimite) => MapEntry('dateLimite${i+1}', dateLimite)),
+      ...actionsList.asMap().map((i, action) => MapEntry('action${i + 1}', action)),
+      ...responsablesList.asMap().map((i, responsable) => MapEntry('responsable${i + 1}', responsable)),
+      ...datesLimitesList.asMap().map((i, dateLimite) => MapEntry('dateLimite${i + 1}', dateLimite)),
+      ...etatActionsList.asMap().map((i, etatAction) => MapEntry('etatAction${i + 1}', etatAction)), // Ajouter les états des actions
       'total': (_checkboxValuesOk.where((value) => value == true).length / _checkboxValuesOk.length) * 100,
     };
 

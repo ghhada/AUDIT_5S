@@ -104,6 +104,11 @@ class _AllDataPageState extends State<AllDataPage> {
           }
         },
         labelAccessorFn: (Ilot ilot, _) => '${ilot.key}: ${ilot.etat}',
+        // Définir le BarLabelDecorator avec le labelStyle noir
+        insideLabelStyleAccessorFn: (Ilot ilot, _) {
+          final color = charts.ColorUtil.fromDartColor(Colors.black);
+          return charts.TextStyleSpec(color: color);
+        },
       ),
     ];
   }
@@ -188,38 +193,7 @@ class _AllDataPageState extends State<AllDataPage> {
                         ),
                       ),
                     ),
-                    Positioned.fill(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Certifié',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            'En cours',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            'Non certifié',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+
                   ],
                 ),
               ),
