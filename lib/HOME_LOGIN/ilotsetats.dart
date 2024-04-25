@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class Ilot {
@@ -15,94 +14,38 @@ class IlotsEtats extends StatefulWidget {
   _IlotsEtatsState createState() => _IlotsEtatsState();
 }
 
-class _IlotsEtatsState extends State<IlotsEtats> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _IlotsEtatsState extends State<IlotsEtats> {
   List<Ilot> ilots = [];
-  int enCoursCount = 0;
-  int certifieCount = 0;
-  int nonCertifieCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _getIlots();
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _getIlots() async {
+  void _getIlots() {
     final databaseReference = FirebaseDatabase.instance.reference().child('ilots');
-    databaseReference.onValue.listen((event) {
-      if (event.snapshot.value != null) {
-        Map<dynamic, dynamic> values = event.snapshot.value as Map<dynamic, dynamic>;
+    databaseReference.onChildAdded.listen((event) {
+      Map<dynamic, dynamic>? values = event.snapshot.value as Map?;
+      if (values != null) {
+        final ilot = Ilot(
+          key: event.snapshot.key!,
+          nom: values['nom'] ?? '',
+          etat: values['etat'] ?? '',
+        );
         setState(() {
-          ilots.clear();
-          enCoursCount = 0;
-          certifieCount = 0;
-          nonCertifieCount = 0;
-          values.forEach((key, value) {
-            final ilot = Ilot(
-              key: key,
-              nom: value['nom'] ?? '',
-              etat: value['etat'] ?? '',
-            );
-            ilots.add(ilot);
-            // Compter les catégories
-            if (ilot.etat == 'en cours') {
-              enCoursCount++;
-            } else if (ilot.etat == 'certifié') {
-              certifieCount++;
-            } else if (ilot.etat == 'non certifié') {
-              nonCertifieCount++;
-            }
-          });
+          ilots.add(ilot);
         });
       }
-    }, onError: (error) {
-      print('Error getting ilots: $error');
     });
   }
 
-  void _supprimerIlot(Ilot ilotASupprimer) {
+  void _supprimerIlot(String key) {
     final databaseReference = FirebaseDatabase.instance.reference().child('ilots');
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Confirmation"),
-          content: Text("Voulez-vous vraiment supprimer cet ilot ?"),
-          actions: <Widget>[
-            TextButton(
-              child: Text("Annuler"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text("Supprimer"),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _confirmerSuppression(ilotASupprimer);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _confirmerSuppression(Ilot ilotASupprimer) {
-    final databaseReference = FirebaseDatabase.instance.reference().child('ilots');
-
-    databaseReference.child(ilotASupprimer.key).remove().then((_) {
+    databaseReference.child(key).remove().then((_) {
       setState(() {
-        ilots.remove(ilotASupprimer);
+        ilots.removeWhere((ilot) => ilot.key == key);
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -120,180 +63,19 @@ class _IlotsEtatsState extends State<IlotsEtats> with SingleTickerProviderStateM
     });
   }
 
-  void _modifierIlot(int index) {
-    final ilotAModifier = ilots[index];
-
-    TextEditingController nomController = TextEditingController(text: ilotAModifier.nom);
-    TextEditingController etatController = TextEditingController(text: ilotAModifier.etat);
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Modifier l'ilot"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              TextField(
-                controller: nomController,
-                decoration: InputDecoration(labelText: 'Nom'),
-              ),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Etat'),
-                value: etatController.text.isNotEmpty ? etatController.text : null,
-                items: <String>['certifié', 'en cours', 'non certifié']
-                    .map<DropdownMenuItem<String>>(
-                      (String value) => DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  ),
-                )
-                    .toList(),
-                onChanged: (String? newValue) {
-                  etatController.text = newValue!;
-                },
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text("Annuler"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text("Enregistrer"),
-              onPressed: () {
-                String nom = nomController.text.trim();
-                String etat = etatController.text.trim();
-
-                if (nom.isNotEmpty && etat.isNotEmpty) {
-                  ilotAModifier.nom = nom;
-                  ilotAModifier.etat = etat;
-                  _enregistrerModifications(ilotAModifier);
-                  setState(() {}); // Rafraîchit l'interface utilisateur
-                  Navigator.of(context).pop();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Veuillez remplir tous les champs"),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _enregistrerModifications(Ilot ilot) {
+  void _modifierIlot(String key, String etat) {
     final databaseReference = FirebaseDatabase.instance.reference().child('ilots');
-    databaseReference.child(ilot.key).set({
-      'nom': ilot.nom,
-      'etat': ilot.etat,
-    }).then((_) {
+    databaseReference.child(key).update({'etat': etat}).then((_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Modifications enregistrées avec succès"),
+          content: Text("État de l'ilot modifié avec succès"),
           backgroundColor: Colors.green,
         ),
       );
     }).catchError((error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Erreur lors de l'enregistrement des modifications"),
-          backgroundColor: Colors.red,
-        ),
-      );
-    });
-  }
-
-  void _ajouterIlot() {
-    TextEditingController nomController = TextEditingController();
-    TextEditingController etatController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Ajouter un ilot"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              TextField(
-                controller: nomController,
-                decoration: InputDecoration(labelText: 'Nom'),
-              ),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Etat'),
-                value: etatController.text.isNotEmpty ? etatController.text : null,
-                items: <String>['certifié', 'en cours', 'non certifié']
-                    .map<DropdownMenuItem<String>>(
-                      (String value) => DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  ),
-                )
-                    .toList(),
-                onChanged: (String? newValue) {
-                  etatController.text = newValue!;
-                },
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text("Annuler"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text("Ajouter"),
-              onPressed: () {
-                String nom = nomController.text.trim();
-                String etat = etatController.text.trim();
-
-                if (nom.isNotEmpty && etat.isNotEmpty) {
-                  _enregistrerNouvelIlot(nom, etat);
-                  setState(() {}); // Rafraîchit l'interface utilisateur
-                  Navigator.of(context).pop();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Veuillez remplir tous les champs"),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _enregistrerNouvelIlot(String nom, String etat) {
-    final databaseReference = FirebaseDatabase.instance.reference().child('ilots');
-    databaseReference.push().set({
-      'nom': nom,
-      'etat': etat,
-    }).then((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Nouvel ilot ajouté avec succès"),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }).catchError((error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Erreur lors de l'ajout du nouvel ilot"),
+          content: Text("Erreur lors de la modification de l'ilot"),
           backgroundColor: Colors.red,
         ),
       );
@@ -304,9 +86,19 @@ class _IlotsEtatsState extends State<IlotsEtats> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Etats des Ilots'),
+        title: Text('États des Ilots'),
       ),
-      body: _buildListPage(),
+      body: ListView.builder(
+        itemCount: ilots.length,
+        itemBuilder: (context, index) {
+          final ilot = ilots[index];
+          return IlotCard(
+            ilot: ilot,
+            onUpdate: (etat) => _modifierIlot(ilot.key, etat),
+            onDelete: () => _supprimerIlot(ilot.key),
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _ajouterIlot,
         tooltip: 'Ajouter un ilot',
@@ -315,94 +107,102 @@ class _IlotsEtatsState extends State<IlotsEtats> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildListPage() {
-    return Expanded(
-      child: ListView.builder(
-        itemCount: ilots.length,
-        itemBuilder: (context, index) {
-          final ilot = ilots[index];
-          return IlotCard(
-            ilot: ilot,
-            onDelete: () {
-              _supprimerIlot(ilot); // Passer l'objet Ilot à supprimer
-            },
-            onEdit: () {
-              _modifierIlot(index);
-            },
-          );
-        },
-      ),
-    );
+  void _ajouterIlot() {
+    // Ajoutez ici la logique pour ajouter un nouvel îlot
   }
 }
 
-class IlotCard extends StatelessWidget {
+class IlotCard extends StatefulWidget {
   final Ilot ilot;
+  final Function(String) onUpdate;
   final VoidCallback onDelete;
-  final VoidCallback onEdit;
 
   const IlotCard({
     required this.ilot,
+    required this.onUpdate,
     required this.onDelete,
-    required this.onEdit,
   });
 
   @override
-  Widget build(BuildContext context) {
-    Color color;
-    switch (ilot.etat) {
-      case 'certifié':
-        color = Colors.lightGreen[100]!;
-        break;
-      case 'en cours':
-        color = Colors.yellow[100]!;
-        break;
-      case 'non certifié':
-        color = Colors.red[100]!;
-        break;
-      default:
-        color = Colors.grey[200]!;
-        break;
-    }
+  _IlotCardState createState() => _IlotCardState();
+}
 
+class _IlotCardState extends State<IlotCard> {
+  late String selectedEtat;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedEtat = widget.ilot.etat;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Card(
       elevation: 4,
       margin: EdgeInsets.all(8),
-      color: color,
-      child: ListTile(
-        title: Text(
-          'Nom: ${ilot.nom}',
-          style: TextStyle(color: Colors.black),
-        ),
-        subtitle: Text(
-          'Etat: ${ilot.etat}',
-          style: TextStyle(
-            fontStyle: FontStyle.italic,
-            color: Colors.black87.withOpacity(0.8),
+      child: Padding(
+      padding: EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'Nom d\'ilot: ${widget.ilot.nom}',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Roboto'),
           ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: Icon(Icons.edit),
-              color: Colors.black,
-              onPressed: onEdit,
-            ),
-            IconButton(
-              icon: Icon(Icons.delete),
-              color: Colors.black,
-              onPressed: onDelete,
-            ),
-          ],
-        ),
+          SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            children: [
+              ChoiceChip(
+                label: Text('Certifié'),
+                selected: selectedEtat == 'certifié',
+                onSelected: (bool selected) {
+                  if (selected) {
+                    setState(() => selectedEtat = 'certifié');
+                    widget.onUpdate('certifié');
+                  }
+                },
+                selectedColor: Colors.green, // Couleur différente pour les états choisis
+              ),
+              ChoiceChip(
+                label: Text('En cours'),
+                selected: selectedEtat == 'en cours',
+                onSelected: (bool selected) {
+                  if (selected) {
+                    setState(() => selectedEtat = 'en cours');
+                    widget.onUpdate('en cours');
+                  }
+                },
+                selectedColor: Colors.blue, // Couleur différente pour les états choisis
+              ),
+              ChoiceChip(
+                label: Text('Non certifié'),
+                selected: selectedEtat == 'non certifié',
+                onSelected: (bool selected) {
+                  if (selected) {
+                    setState(() => selectedEtat = 'non certifié');
+                    widget.onUpdate('non certifié');
+                  }
+                },
+                selectedColor: Colors.red, // Couleur différente pour les états choisis
+              ),
+            ],
+          ),
+          SizedBox(height: 10),
+          IconButton(
+            icon: Icon(Icons.delete_outline),
+            onPressed: widget.onDelete,
+            color: Colors.red,
+          ),
+        ],
       ),
+    ),
     );
   }
 }
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
   runApp(MaterialApp(
     home: IlotsEtats(),
   ));
