@@ -26,7 +26,8 @@ class DebutAuditPage extends StatefulWidget {
   _DebutAuditPageState createState() => _DebutAuditPageState();
 }
 
-class _DebutAuditPageState extends State<DebutAuditPage> {
+class _DebutAuditPageState extends State<DebutAuditPage>
+{
   String? selectedAuditeur;
   String? selectedService;
   String? selectedIlot;
@@ -85,7 +86,7 @@ class _DebutAuditPageState extends State<DebutAuditPage> {
         ),
       );
     } else {
-      // Affichez une boîte de dialogue ou un message d'erreur indiquant à l'utilisateur de remplir toutes les informations nécessaires.
+      // Gérer le cas où les champs ne sont pas sélectionnés
     }
   }
 
@@ -96,25 +97,34 @@ class _DebutAuditPageState extends State<DebutAuditPage> {
         centerTitle: true,
         title: const Text("Début audit"),
       ),
+      backgroundColor: Color(0xFF060D3A),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Container(
-                padding: widget.containerPadding,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey, width: widget.containerBorderWidth),
-                  borderRadius: BorderRadius.circular(15),
+            // Dropdown pour choisir l'auditeur
+            Container(
+              padding: EdgeInsets.all(20.0),
+              margin: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+              decoration: BoxDecoration(
+                color: Color(0xFFFFFFFF),
+                border: Border.all(color: Colors.grey, width: 1.0),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  unselectedWidgetColor: Colors.orange,
                 ),
                 child: DropdownButton<String>(
-                  iconSize: widget.dropdownIconSize,
-                  icon: Icon(Icons.arrow_drop_down),
+                  iconSize: 24.0,
+                  icon: Icon(
+                    Icons.arrow_drop_down,
+                    color: Colors.orange,
+                  ),
                   isExpanded: true,
                   hint: Text(
                     "Choisissez l'auditeur",
-                    style: TextStyle(fontSize: widget.labelTextSize),
+                    style: TextStyle(fontSize: 18.0),
                   ),
                   value: selectedAuditeur,
                   items: auditeursNoms.map((String nom) {
@@ -122,7 +132,7 @@ class _DebutAuditPageState extends State<DebutAuditPage> {
                       value: nom,
                       child: Text(
                         nom,
-                        style: TextStyle(fontSize: widget.dropdownItemFontSize),
+                        style: TextStyle(fontSize: 18.0),
                       ),
                     );
                   }).toList(),
@@ -135,70 +145,91 @@ class _DebutAuditPageState extends State<DebutAuditPage> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Container(
-                padding: widget.containerPadding,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey, width: widget.containerBorderWidth),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: DropdownButton<String>(
-                  iconSize: widget.dropdownIconSize,
-                  icon: Icon(Icons.arrow_drop_down),
-                  isExpanded: true,
-                  hint: Text(
-                    "Choisissez l'ilôt",
-                    style: TextStyle(fontSize: widget.labelTextSize),
-                  ),
-                  value: selectedIlot,
-                  items: ilotsNoms.map((String nom) {
-                    return DropdownMenuItem<String>(
-                      value: nom,
-                      child: Text(
-                        nom,
-                        style: TextStyle(fontSize: widget.dropdownItemFontSize),
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedIlot = value;
-                    });
-                  },
-                ),
+            // Dropdown pour choisir l'ilôt
+            Container(
+              padding: EdgeInsets.all(20.0),
+              margin: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+              decoration: BoxDecoration(
+                color: Color(0xFFFFFFFF),
+                border: Border.all(color: Colors.grey, width: 1.0),
+                borderRadius: BorderRadius.circular(15),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Container(
-                padding: widget.containerPadding,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey, width: widget.containerBorderWidth),
-                  borderRadius: BorderRadius.circular(15),
+              child: DropdownButton<String>(
+                iconSize: 24.0,
+                icon: Icon(
+                  Icons.arrow_drop_down,
+                  color: Colors.orange,
                 ),
-                child: Text(
-                  selectedAuditeur != null ? "Service : $selectedService" : "Service",
-                  style: TextStyle(fontSize: widget.labelTextSize),
+                isExpanded: true,
+                hint: Text(
+                  "Choisissez l'ilôt",
+                  style: TextStyle(fontSize: 18.0),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: ElevatedButton(
-                onPressed: () => _navigateToNextPage(context),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "Suivant",
-                      style: TextStyle(fontSize: widget.buttonFontSize),
+                value: selectedIlot,
+                items: ilotsNoms.map((String nom) {
+                  return DropdownMenuItem<String>(
+                    value: nom,
+                    child: Text(
+                      nom,
+                      style: TextStyle(fontSize: 18.0),
                     ),
-                    Icon(Icons.arrow_forward_ios),
-                  ],
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: widget.buttonTextPadding,
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedIlot = value;
+                  });
+                },
+              ),
+            ),
+            // Affichage du service sélectionné
+            Container(
+              padding: EdgeInsets.all(20.0),
+              margin: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+              decoration: BoxDecoration(
+                color: Color(0xFFFFFFFF),
+                border: Border.all(color: Colors.grey, width: 1.0),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Text(
+                selectedAuditeur != null ? "Service : $selectedService" : "Service",
+                style: TextStyle(fontSize: 18.0),
+              ),
+            ),
+            // Bouton pour passer à la page suivante
+            Center(
+              child: Container(
+                padding: EdgeInsets.only(top: 20.0),
+                child: InkWell(
+                  onTap: () {
+                    _navigateToNextPage(context);
+                  },
+                  borderRadius: BorderRadius.circular(30.0),
+                  child: Ink(
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 15, horizontal:100),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Suivant',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -208,4 +239,3 @@ class _DebutAuditPageState extends State<DebutAuditPage> {
     );
   }
 }
-

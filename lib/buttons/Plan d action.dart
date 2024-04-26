@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../PAC/pac.dart'; // Assure-toi que le chemin est correct.
+import '../PAC/pac.dart';
 
 class Button2Page extends StatelessWidget {
   @override

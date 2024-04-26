@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PACPage extends StatefulWidget {
   @override
@@ -10,11 +10,35 @@ class PACPage extends StatefulWidget {
 class _PACPageState extends State<PACPage> {
   final DatabaseReference _auditsRef = FirebaseDatabase.instance.reference().child('audits');
   List<Map<dynamic, dynamic>> items = [];
+  Map<int, Map<int, bool>> actionStates = {};
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _auditsRef.onChildAdded.listen((event) {
+      Map<dynamic, dynamic>? values = event.snapshot.value as Map?;
+      setState(() {
+        items.add({...values!, 'key': event.snapshot.key});
+        if (items.length == 1) {
+          _loadActionStates();
+        }
+      });
+    });
+  }
+
+  void _loadActionStates() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    for (int i = 0; i < items.length; i++) {
+      Map<int, bool> savedStates = {};
+      for (int j = 0; j < items[i]['total']; j++) {
+        String actionStateKey = 'etat_action${j + 1}';
+        bool savedState = prefs.getBool('actionState_${items[i]['key']}_$actionStateKey') ?? false;
+        savedStates[j] = savedState;
+      }
+      setState(() {
+        actionStates[i] = savedStates;
+      });
+    }
   }
 
   @override
@@ -29,8 +53,9 @@ class _PACPageState extends State<PACPage> {
       body: items.isEmpty
           ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
+        scrollDirection: Axis.horizontal,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 10.0),
           child: DataTable(
             columnSpacing: 20,
             columns: [
@@ -55,13 +80,9 @@ class _PACPageState extends State<PACPage> {
                 List<String> actions = [];
                 List<String> responsables = [];
                 List<String> datesLimites = [];
-                List<bool> actionStates = [];
                 for (String key in item.keys) {
                   if (key.startsWith('action')) {
                     actions.add(item[key].toString().split(': ')[1]);
-                    String actionKey = key; // Action key
-                    bool actionDone = item['${actionKey}Done'] == 'Done'; // Get action state
-                    actionStates.add(actionDone);
                   }
                   if (key.startsWith('responsable')) {
                     responsables.add(item[key].toString().split(': ')[1]);
@@ -72,27 +93,33 @@ class _PACPageState extends State<PACPage> {
                 }
                 int maxRowCount = actions.length;
                 for (int i = 0; i < maxRowCount; i++) {
+                  bool actionDone = actionStates[index]?[i] ?? false;
                   rows.add(
                     DataRow(
                       cells: [
                         DataCell(Text((index + 1).toString())),
                         DataCell(i == 0 ? Text(nomAuditeur) : SizedBox.shrink()),
                         DataCell(i == 0 ? Text(ilot) : SizedBox.shrink()),
-                        DataCell(Text(actions[i])),
+                        DataCell(Text(actions.length > i ? actions[i] : 'N/A')),
                         DataCell(Text(responsables.length > i ? responsables[i] : 'N/A')),
                         DataCell(Text(datesLimites.length > i ? datesLimites[i] : 'N/A')),
                         DataCell(
                           Row(
                             children: [
-                              Text(actionStates[i] ? 'Done' : 'En cours',
-                                  style: TextStyle(
-                                      color: actionStates[i] ? Colors.green : Colors.yellow)),
+                              Text(actionDone ? 'Done' : 'En cours', style: TextStyle(color: actionDone ? Colors.green : Colors.yellow)),
                               Switch(
-                                value: actionStates[i],
+                                value: actionDone,
                                 activeColor: Colors.green,
                                 inactiveTrackColor: Colors.yellow,
                                 onChanged: (bool value) {
-                                  _updateActionState(index, 'action${i + 1}', value ? 'Done' : 'En cours');
+                                  setState(() {
+                                    if (actionStates.containsKey(index)) {
+                                      actionStates[index]![i] = value;
+                                    } else {
+                                      actionStates[index] = {i: value};
+                                    }
+                                    updateActionState(index, i, value);
+                                  });
                                 },
                               ),
                             ],
@@ -113,37 +140,20 @@ class _PACPageState extends State<PACPage> {
     );
   }
 
-  void _updateActionState(int itemIndex, String actionKey, String newState) {
-    if (itemIndex < items.length) {
-      _auditsRef.child(itemIndex.toString()).update({'$actionKey': newState}).then((_) {
-        setState(() {
-          items[itemIndex]['${actionKey}Done'] = newState;
-        });
-      });
-    }
-  }
-
-
-  void _loadData() {
-    _auditsRef.onChildAdded.listen((event) {
-      Map<dynamic, dynamic>? values = event.snapshot.value as Map?;
-      if (values != null) {
-        setState(() {
-          items.add(values);
-        });
-      }
-    });
-  }
-
   String _extractDate(String dateTimeString) {
     return dateTimeString.split(': ')[1].split('T')[0];
   }
-}
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(MaterialApp(
-    home: PACPage(),
-  ));
+  void updateActionState(int index, int actionIndex, bool value) async {
+    String actionStateKey = 'etat_action${actionIndex + 1}';
+    String auditKey = items[index]['key'];
+    String auditPath = '$auditKey';
+    try {
+      await _auditsRef.child(auditPath).update({actionStateKey: value ? 'Done' : 'En cours'});
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setBool('actionState_${items[index]['key']}_$actionStateKey', value);
+    } catch (e) {
+      print('Error updating action state: $e');
+    }
+  }
 }
