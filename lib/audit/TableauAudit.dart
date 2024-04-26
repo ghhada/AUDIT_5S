@@ -46,36 +46,58 @@ class _TableauAuditState extends State<TableauAudit> {
       appBar: AppBar(
         title: Text('Tableau Audit'),
       ),
+      backgroundColor: Color(0xFF060D3A),
       body: Center(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(height: 20),
-            Text('Nom de l\'auditeur: ${widget.nomAuditeur}'),
-            Text('Service: ${widget.service}'),
-            Text('Ilot: ${widget.ilot}'),
-            Text('Date: ${widget.date}'),
-            Text('Heure: ${widget.heure}'),
-            SizedBox(height: 20),
-            Text(
-              'Grille de maintien',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Center(
+              child: SizedBox(
+                width: 300,
+                child: Card(
+                  color: Colors.white,
+                  elevation: 4,
+                  margin: EdgeInsets.all(8),
+                  child: Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Informations de l\'auditeur',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange),
+                        ),
+                        SizedBox(height: 8),
+                        Text('Nom de l\'auditeur: ${widget.nomAuditeur}'),
+                        Text('Service: ${widget.service}'),
+                        Text('Ilot: ${widget.ilot}'),
+                        Text('Date: ${widget.date}'),
+                        Text('Heure: ${widget.heure}'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
+            SizedBox(height: 20),
             Expanded(
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width),
-                  child: DataTable(
-                    columns: [
-                      DataColumn(label: SizedBox(width: 550, child: Text('Critères de maintien', style: TextStyle(fontSize: 22)))),
-                      DataColumn(label: SizedBox(width: 250, child: Text('Réponse', style: TextStyle(fontSize: 22)))),
-                      DataColumn(label: SizedBox(width: 250, child: Text('Actions', style: TextStyle(fontSize: 22)))),
-                      DataColumn(label: SizedBox(width: 250, child: Text('Responsable', style: TextStyle(fontSize: 22)))),
-                      DataColumn(label: SizedBox(width: 250, child: Text('Date limite', style: TextStyle(fontSize: 22)))),
-                    ],
-                    rows: List.generate(10, (index) => _buildDataRow(index)),
+                  child: Container(
+                    color: Colors.white,
+                    child: DataTable(
+                      columns: [
+                        DataColumn(label: SizedBox(width: 550, child: Text('Critères de maintien', style: TextStyle(fontSize: 22, color: Colors.black)))),
+                        DataColumn(label: SizedBox(width: 250, child: Text('Réponse', style: TextStyle(fontSize: 22, color: Colors.black)))),
+                        DataColumn(label: SizedBox(width: 250, child: Text('Actions', style: TextStyle(fontSize: 22, color: Colors.black)))),
+                        DataColumn(label: SizedBox(width: 250, child: Text('Responsable', style: TextStyle(fontSize: 22, color: Colors.black)))),
+                        DataColumn(label: SizedBox(width: 250, child: Text('Date limite', style: TextStyle(fontSize: 22, color: Colors.black)))),
+                      ],
+                      rows: List.generate(10, (index) => _buildDataRow(index)),
+                    ),
                   ),
                 ),
               ),
@@ -87,11 +109,16 @@ class _TableauAuditState extends State<TableauAudit> {
               },
               child: Text('Terminer'),
             ),
+            SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
+
+
+
+
 
   DataRow _buildDataRow(int index) {
     return DataRow(cells: [
@@ -99,6 +126,7 @@ class _TableauAuditState extends State<TableauAudit> {
       DataCell(
         Row(
           children: [
+
             Checkbox(
               value: _checkboxValuesOk[index] ?? false,
               onChanged: (value) {
