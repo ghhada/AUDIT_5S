@@ -39,7 +39,6 @@ class _TableauAuditState extends State<TableauAudit> {
     _responsables = List.generate(10, (index) => null);
     _datesLimites = List.generate(10, (index) => null);
   }
-
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -96,7 +95,7 @@ class _TableauAuditState extends State<TableauAudit> {
                 child: Container(
                   color: Color(0xFFFFFFFF), // Correspond à la couleur d'arrière-plan du tableau
                   child: DataTable(
-                    dataRowHeight: 60, // Réduire la hauteur de la ligne à 80 pixels
+                    dataRowHeight: 80, // Réduire la hauteur de la ligne à 80 pixels
                     columns: [
                       DataColumn(label: SizedBox(width: 550, child: Text('Critères de maintien', style: TextStyle(fontSize: 22, color: Colors.black)))),
                       DataColumn(label: SizedBox(width: 250, child: Text('Réponse', style: TextStyle(fontSize: 22, color: Colors.black)))),
@@ -110,21 +109,50 @@ class _TableauAuditState extends State<TableauAudit> {
               ),
             ),
           ),
-
-
-
-
           SliverToBoxAdapter(
             child: SizedBox(height: 30),
           ),
           SliverToBoxAdapter(
-            child: ElevatedButton(
-              onPressed: () {
-                _finishAudit();
-              },
-              child: Text('Terminer'),
+            child: SizedBox(height: 30),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(height: 30),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(height: 30),
+          ),
+          SliverToBoxAdapter(
+            child: Center(
+              child: SizedBox(
+                width: 200, // Largeur souhaitée pour le bouton
+                child: ElevatedButton(
+                  onPressed: () {
+                    _finishAudit();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white, backgroundColor: Colors.orange, // Couleur du texte blanc
+                    minimumSize: Size(100, 60), // Taille minimale du bouton
+                  ),
+                  child: Text(
+                    'Terminer',
+                    style: TextStyle(fontSize: 16), // Taille de police personnalisée
+                  ),
+                ),
+              ),
             ),
           ),
+          SliverToBoxAdapter(
+            child: SizedBox(height: 20),
+          ),
+
+          SliverToBoxAdapter(
+            child: SizedBox(height: 20),
+          ),
+
+          SliverToBoxAdapter(
+            child: SizedBox(height: 20),
+          ),
+
           SliverToBoxAdapter(
             child: SizedBox(height: 20),
           ),
