@@ -95,13 +95,13 @@ class _TableauAuditState extends State<TableauAudit> {
                 child: Container(
                   color: Color(0xFFFFFFFF), // Correspond à la couleur d'arrière-plan du tableau
                   child: DataTable(
-                    dataRowHeight: 60, // Réduire la hauteur de la ligne à 80 pixels
+                    dataRowHeight: 80, // Réduire la hauteur de la ligne à 80 pixels
                     columns: [
-                      DataColumn(label: SizedBox(width: 550, child: Text('Critères de maintien', style: TextStyle(fontSize: 22, color: Colors.black)))),
-                      DataColumn(label: SizedBox(width: 250, child: Text('Réponse', style: TextStyle(fontSize: 22, color: Colors.black)))),
-                      DataColumn(label: SizedBox(width: 250, child: Text('Actions', style: TextStyle(fontSize: 22, color: Colors.black)))),
-                      DataColumn(label: SizedBox(width: 250, child: Text('Responsable', style: TextStyle(fontSize: 22, color: Colors.black)))),
-                      DataColumn(label: SizedBox(width: 250, child: Text('Date limite', style: TextStyle(fontSize: 22, color: Colors.black)))),
+                      DataColumn(label: SizedBox(width: 550, child: Text('Critères de maintien', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                      DataColumn(label: SizedBox(width: 250, child: Text('Réponse', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                      DataColumn(label: SizedBox(width: 250, child: Text('Actions', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                      DataColumn(label: SizedBox(width: 250, child: Text('Responsable', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                      DataColumn(label: SizedBox(width: 250, child: Text('Date limite', style: TextStyle(fontSize: 30, color: Colors.black)))),
                     ],
                     rows: List.generate(10, (index) => _buildDataRow(index)),
                   ),
