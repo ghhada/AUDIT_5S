@@ -40,153 +40,203 @@ class _TableauAuditState extends State<TableauAudit> {
     _datesLimites = List.generate(10, (index) => null);
   }
 
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Tableau Audit'),
       ),
       backgroundColor: Color(0xFF060D3A),
-      body: Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(height: 20),
-            Center(
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: SizedBox(height: 20),
+          ),
+          SliverToBoxAdapter(
+            child: Center(
               child: SizedBox(
                 width: 300,
-                child: Card(
-                  color: Colors.white,
-                  elevation: 4,
-                  margin: EdgeInsets.all(8),
-                  child: Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Informations de l\'auditeur',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange),
-                        ),
-                        SizedBox(height: 8),
-                        Text('Nom de l\'auditeur: ${widget.nomAuditeur}'),
-                        Text('Service: ${widget.service}'),
-                        Text('Ilot: ${widget.ilot}'),
-                        Text('Date: ${widget.date}'),
-                        Text('Heure: ${widget.heure}'),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width),
-                  child: Container(
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width, // Utilisez la largeur de l'écran
+                  child: Card(
                     color: Colors.white,
-                    child: DataTable(
-                      columns: [
-                        DataColumn(label: SizedBox(width: 550, child: Text('Critères de maintien', style: TextStyle(fontSize: 22, color: Colors.black)))),
-                        DataColumn(label: SizedBox(width: 250, child: Text('Réponse', style: TextStyle(fontSize: 22, color: Colors.black)))),
-                        DataColumn(label: SizedBox(width: 250, child: Text('Actions', style: TextStyle(fontSize: 22, color: Colors.black)))),
-                        DataColumn(label: SizedBox(width: 250, child: Text('Responsable', style: TextStyle(fontSize: 22, color: Colors.black)))),
-                        DataColumn(label: SizedBox(width: 250, child: Text('Date limite', style: TextStyle(fontSize: 22, color: Colors.black)))),
-                      ],
-                      rows: List.generate(10, (index) => _buildDataRow(index)),
+                    elevation: 4,
+                    margin: EdgeInsets.all(8),
+                    child: Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Informations de l\'auditeur',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange),
+                          ),
+                          SizedBox(height: 8),
+                          Text('Nom de l\'auditeur: ${widget.nomAuditeur}'),
+                          Text('Service: ${widget.service}'),
+                          Text('Ilot: ${widget.ilot}'),
+                          Text('Date: ${widget.date}'),
+                          Text('Heure: ${widget.heure}'),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(height: 20),
+          ),
+          SliverFillRemaining(
+            hasScrollBody: true,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width),
+                child: Container(
+                  color: Color(0xFFFFFFFF), // Correspond à la couleur d'arrière-plan du tableau
+                  child: DataTable(
+                    dataRowHeight: 60, // Réduire la hauteur de la ligne à 80 pixels
+                    columns: [
+                      DataColumn(label: SizedBox(width: 550, child: Text('Critères de maintien', style: TextStyle(fontSize: 22, color: Colors.black)))),
+                      DataColumn(label: SizedBox(width: 250, child: Text('Réponse', style: TextStyle(fontSize: 22, color: Colors.black)))),
+                      DataColumn(label: SizedBox(width: 250, child: Text('Actions', style: TextStyle(fontSize: 22, color: Colors.black)))),
+                      DataColumn(label: SizedBox(width: 250, child: Text('Responsable', style: TextStyle(fontSize: 22, color: Colors.black)))),
+                      DataColumn(label: SizedBox(width: 250, child: Text('Date limite', style: TextStyle(fontSize: 22, color: Colors.black)))),
+                    ],
+                    rows: List.generate(10, (index) => _buildDataRow(index)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+
+
+
+          SliverToBoxAdapter(
+            child: SizedBox(height: 30),
+          ),
+          SliverToBoxAdapter(
+            child: ElevatedButton(
               onPressed: () {
                 _finishAudit();
               },
               child: Text('Terminer'),
             ),
-            SizedBox(height: 20),
-          ],
-        ),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(height: 20),
+          ),
+        ],
       ),
     );
   }
 
-
-
-
-
   DataRow _buildDataRow(int index) {
     return DataRow(cells: [
-      DataCell(SizedBox(width: 550, child: Text(_getLabelText(index), style: TextStyle(fontSize: 20)))),
       DataCell(
-        Row(
-          children: [
-
-            Checkbox(
-              value: _checkboxValuesOk[index] ?? false,
-              onChanged: (value) {
-                setState(() {
-                  _checkboxValuesOk[index] = value;
-                  _checkboxValuesNonOk[index] = !value!;
-                });
-              },
-            ),
-            Text('Ok', style: TextStyle(fontSize: 20)),
-            Checkbox(
-              value: _checkboxValuesNonOk[index] ?? false,
-              onChanged: (value) {
-                setState(() {
-                  _checkboxValuesNonOk[index] = value;
-                  _checkboxValuesOk[index] = !value!;
-                });
-              },
-            ),
-            Text('Non Ok', style: TextStyle(fontSize: 20)),
-          ],
-        ),
-      ),
-      DataCell(
-        TextField(
-          decoration: InputDecoration(
-            hintText: 'Actions',
+        Container(
+          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          width: 750, // Augmentation de la largeur de la cellule
+          decoration: BoxDecoration(
+            color: index % 2 == 0 ? Colors.grey[200] : Colors.white,
           ),
-          onChanged: (value) {
-            setState(() {
-              _actions[index] = value;
-            });
-          },
-        ),
-      ),
-      DataCell(
-        TextField(
-          decoration: InputDecoration(
-            hintText: 'Responsable',
-          ),
-          onChanged: (value) {
-            setState(() {
-              _responsables[index] = value;
-            });
-          },
-        ),
-      ),
-      DataCell(
-        TextButton(
-          onPressed: () {
-            _selectDate(context, index);
-          },
           child: Text(
-            _datesLimites[index] != null ? '${_datesLimites[index]!.day}/${_datesLimites[index]!.month}/${_datesLimites[index]!.year}' : 'Choisir une date',
-            style: TextStyle(fontSize: 16),
+            _getLabelText(index),
+            style: TextStyle(fontSize: 18, color: Colors.black),
+            softWrap: true, // Permettre le texte multiligne
+          ),
+        ),
+      ),
+      DataCell(
+        Container(
+          width: 200,
+          child: Row(
+            children: [
+              Checkbox(
+                value: _checkboxValuesOk[index] ?? false,
+                onChanged: (value) {
+                  setState(() {
+                    _checkboxValuesOk[index] = value;
+                    _checkboxValuesNonOk[index] = !value!;
+                  });
+                },
+              ),
+              Text('Ok', style: TextStyle(fontSize: 16)),
+              SizedBox(width: 8),
+              Checkbox(
+                value: _checkboxValuesNonOk[index] ?? false,
+                onChanged: (value) {
+                  setState(() {
+                    _checkboxValuesNonOk[index] = value;
+                    _checkboxValuesOk[index] = !value!;
+                  });
+                },
+              ),
+              Text('Non Ok', style: TextStyle(fontSize: 16)),
+            ],
+          ),
+        ),
+      ),
+      DataCell(
+        Container(
+          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          width: 200,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey),
+          ),
+          child: TextField(
+            decoration: InputDecoration.collapsed(hintText: 'Actions'),
+            onChanged: (value) {
+              setState(() {
+                _actions[index] = value;
+              });
+            },
+          ),
+        ),
+      ),
+      DataCell(
+        Container(
+          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          width: 200,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey),
+          ),
+          child: TextField(
+            decoration: InputDecoration.collapsed(hintText: 'Responsable'),
+            onChanged: (value) {
+              setState(() {
+                _responsables[index] = value;
+              });
+            },
+          ),
+        ),
+      ),
+      DataCell(
+        Container(
+          width: 200,
+          child: InkWell(
+            onTap: () {
+              _selectDate(context, index);
+            },
+            child: Row(
+              children: [
+                Text(
+                  _datesLimites[index] != null ? '${_datesLimites[index]!.day}/${_datesLimites[index]!.month}/${_datesLimites[index]!.year}' : 'Choisir une date',
+                  style: TextStyle(fontSize: 16, color: Colors.blue),
+                ),
+                Icon(Icons.calendar_today, color: Colors.blue),
+              ],
+            ),
           ),
         ),
       ),
     ]);
   }
+
 
   Future<void> _selectDate(BuildContext context, int index) async {
     final DateTime? picked = await showDatePicker(
