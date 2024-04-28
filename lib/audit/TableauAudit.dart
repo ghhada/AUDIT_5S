@@ -44,85 +44,58 @@ class _TableauAuditState extends State<TableauAudit> {
       appBar: AppBar(
         title: Text('Tableau Audit'),
       ),
-      backgroundColor: Color(0xFF060D3A),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: SizedBox(height: 20),
-          ),
-          SliverToBoxAdapter(
-            child: Center(
+      backgroundColor: Color(0xFFFFFFFF),
+      body: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            SizedBox(height: 20),
+            Center(
               child: SizedBox(
                 width: 300,
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width, // Utilisez la largeur de l'écran
-                  child: Card(
-                    color: Colors.white,
-                    elevation: 4,
-                    margin: EdgeInsets.all(8),
-                    child: Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Informations de l\'auditeur',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange),
-                          ),
-                          SizedBox(height: 8),
-                          Text('Nom de l\'auditeur: ${widget.nomAuditeur}'),
-                          Text('Service: ${widget.service}'),
-                          Text('Ilot: ${widget.ilot}'),
-                          Text('Date: ${widget.date}'),
-                          Text('Heure: ${widget.heure}'),
-                        ],
-                      ),
+                child: Card(
+                  color: Colors.white,
+                  elevation: 4,
+                  margin: EdgeInsets.all(8),
+                  child: Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Informations de l\'auditeur',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange),
+                        ),
+                        SizedBox(height: 8),
+                        Text('Nom de l\'auditeur: ${widget.nomAuditeur}'),
+                        Text('Service: ${widget.service}'),
+                        Text('Ilot: ${widget.ilot}'),
+                        Text('Date: ${widget.date}'),
+                        Text('Heure: ${widget.heure}'),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: SizedBox(height: 20),
-          ),
-          SliverFillRemaining(
-            hasScrollBody: true,
-            child: SingleChildScrollView(
+            SizedBox(height: 20),
+            SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width),
-                child: Container(
-                  color: Color(0xFFFFFFFF), // Correspond à la couleur d'arrière-plan du tableau
-                  child: DataTable(
-                    dataRowHeight: 80, // Réduire la hauteur de la ligne à 80 pixels
-                    columns: [
-                      DataColumn(label: SizedBox(width: 550, child: Text('Critères de maintien', style: TextStyle(fontSize: 30, color: Colors.black)))),
-                      DataColumn(label: SizedBox(width: 250, child: Text('Réponse', style: TextStyle(fontSize: 30, color: Colors.black)))),
-                      DataColumn(label: SizedBox(width: 250, child: Text('Actions', style: TextStyle(fontSize: 30, color: Colors.black)))),
-                      DataColumn(label: SizedBox(width: 250, child: Text('Responsable', style: TextStyle(fontSize: 30, color: Colors.black)))),
-                      DataColumn(label: SizedBox(width: 250, child: Text('Date limite', style: TextStyle(fontSize: 30, color: Colors.black)))),
-                    ],
-                    rows: List.generate(10, (index) => _buildDataRow(index)),
-                  ),
-                ),
+              child: DataTable(
+                dataRowHeight: 80, // Réduire la hauteur de la ligne à 80 pixels
+                columns: [
+                  DataColumn(label: SizedBox(width: 550, child: Text('Critères de maintien', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                  DataColumn(label: SizedBox(width: 250, child: Text('Réponse', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                  DataColumn(label: SizedBox(width: 250, child: Text('Actions', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                  DataColumn(label: SizedBox(width: 250, child: Text('Responsable', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                  DataColumn(label: SizedBox(width: 250, child: Text('Date limite', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                ],
+                rows: List.generate(10, (index) => _buildDataRow(index)),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: SizedBox(height: 30),
-          ),
-          SliverToBoxAdapter(
-            child: SizedBox(height: 30),
-          ),
-          SliverToBoxAdapter(
-            child: SizedBox(height: 30),
-          ),
-          SliverToBoxAdapter(
-            child: SizedBox(height: 30),
-          ),
-          SliverToBoxAdapter(
-            child: Center(
+            SizedBox(height: 30),
+            Center(
               child: SizedBox(
                 width: 200, // Largeur souhaitée pour le bouton
                 child: ElevatedButton(
@@ -140,26 +113,24 @@ class _TableauAuditState extends State<TableauAudit> {
                 ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: SizedBox(height: 20),
-          ),
+            SizedBox(height: 20),
 
-          SliverToBoxAdapter(
-            child: SizedBox(height: 20),
-          ),
-
-          SliverToBoxAdapter(
-            child: SizedBox(height: 20),
-          ),
-
-          SliverToBoxAdapter(
-            child: SizedBox(height: 20),
-          ),
-        ],
+            // Affichage du total
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              child: Text(
+                'Total : ${(_checkboxValuesOk.where((value) => value == true).length / _checkboxValuesOk.length) * 100}%',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+
+
+
 
   DataRow _buildDataRow(int index) {
     return DataRow(cells: [
@@ -344,6 +315,7 @@ class _TableauAuditState extends State<TableauAudit> {
     // Sauvegarder les données de l'audit dans la base de données
     await _databaseRef.push().set(auditData);
   }
+
 }
 
 void main() async {
