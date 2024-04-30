@@ -16,25 +16,27 @@ class _PACPageState extends State<PACPage> {
   void initState() {
     super.initState();
     _auditsRef.onChildAdded.listen((event) {
-      Map<dynamic, dynamic>? values = event.snapshot.value as Map?;
       setState(() {
+        Map<dynamic, dynamic>? values = event.snapshot.value as Map?;
         items.add({...values!, 'key': event.snapshot.key});
-        _loadActionStates(); // Call _loadActionStates for each audit
+        _loadActionStates(event); // Call _loadActionStates for each audit
       });
     });
   }
 
-  void _loadActionStates() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    for (int i = 0; i < items.length; i++) {
+  void _loadActionStates(DatabaseEvent event) {
+    DataSnapshot dataSnapshot = event.snapshot;
+    Map<dynamic, dynamic>? values = dataSnapshot.value as Map?;
+    String auditKey = dataSnapshot.key as String;
+    if (values != null) {
       Map<int, bool> savedStates = {};
-      for (int j = 0; j < items[i]['total']; j++) {
+      for (int j = 0; j < values['total']; j++) {
         String actionStateKey = 'etat_action${j + 1}';
-        bool savedState = prefs.getBool('actionState_${items[i]['key']}_$actionStateKey') ?? false;
+        bool savedState = values[actionStateKey] == 'Done';
         savedStates[j] = savedState;
       }
       setState(() {
-        actionStates[i] = savedStates;
+        actionStates[items.indexWhere((item) => item['key'] == auditKey)] = savedStates;
       });
     }
   }

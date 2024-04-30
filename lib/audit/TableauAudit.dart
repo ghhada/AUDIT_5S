@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server.dart';
 
 class TableauAudit extends StatefulWidget {
   final String nomAuditeur;
@@ -39,12 +41,13 @@ class _TableauAuditState extends State<TableauAudit> {
     _responsables = List.generate(10, (index) => null);
     _datesLimites = List.generate(10, (index) => null);
   }
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Tableau Audit'),
       ),
-      backgroundColor: Color(0xFFFFFFFF),
+      backgroundColor: Colors.blue, // Changement de la couleur de fond en bleu
       body: SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: ListView(
@@ -55,7 +58,7 @@ class _TableauAuditState extends State<TableauAudit> {
               child: SizedBox(
                 width: 300,
                 child: Card(
-                  color: Colors.white,
+                  color: Colors.orange, // Changement de la couleur du Card en orange
                   elevation: 4,
                   margin: EdgeInsets.all(8),
                   child: Padding(
@@ -65,14 +68,14 @@ class _TableauAuditState extends State<TableauAudit> {
                       children: [
                         Text(
                           'Informations de l\'auditeur',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white), // Changement de la couleur du texte en blanc
                         ),
                         SizedBox(height: 8),
-                        Text('Nom de l\'auditeur: ${widget.nomAuditeur}'),
-                        Text('Service: ${widget.service}'),
-                        Text('Ilot: ${widget.ilot}'),
-                        Text('Date: ${widget.date}'),
-                        Text('Heure: ${widget.heure}'),
+                        Text('Nom de l\'auditeur: ${widget.nomAuditeur}', style: TextStyle(color: Colors.white)),
+                        Text('Service: ${widget.service}', style: TextStyle(color: Colors.white)),
+                        Text('Ilot: ${widget.ilot}', style: TextStyle(color: Colors.white)),
+                        Text('Date: ${widget.date}', style: TextStyle(color: Colors.white)),
+                        Text('Heure: ${widget.heure}', style: TextStyle(color: Colors.white)),
                       ],
                     ),
                   ),
@@ -83,13 +86,13 @@ class _TableauAuditState extends State<TableauAudit> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                dataRowHeight: 80, // Réduire la hauteur de la ligne à 80 pixels
+                dataRowHeight: 80,
                 columns: [
-                  DataColumn(label: SizedBox(width: 550, child: Text('Critères de maintien', style: TextStyle(fontSize: 30, color: Colors.black)))),
-                  DataColumn(label: SizedBox(width: 250, child: Text('Réponse', style: TextStyle(fontSize: 30, color: Colors.black)))),
-                  DataColumn(label: SizedBox(width: 250, child: Text('Actions', style: TextStyle(fontSize: 30, color: Colors.black)))),
-                  DataColumn(label: SizedBox(width: 250, child: Text('Responsable', style: TextStyle(fontSize: 30, color: Colors.black)))),
-                  DataColumn(label: SizedBox(width: 250, child: Text('Date limite', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                  DataColumn(label: SizedBox(width: 550, child: Text('Critères de maintien', style: TextStyle(fontSize: 30, color: Colors.white)))),
+                  DataColumn(label: SizedBox(width: 250, child: Text('Réponse', style: TextStyle(fontSize: 30, color: Colors.white)))),
+                  DataColumn(label: SizedBox(width: 250, child: Text('Actions', style: TextStyle(fontSize: 30, color: Colors.white)))),
+                  DataColumn(label: SizedBox(width: 250, child: Text('Responsable', style: TextStyle(fontSize: 30, color: Colors.white)))),
+                  DataColumn(label: SizedBox(width: 250, child: Text('Date limite', style: TextStyle(fontSize: 30, color: Colors.white)))),
                 ],
                 rows: List.generate(10, (index) => _buildDataRow(index)),
               ),
@@ -97,25 +100,24 @@ class _TableauAuditState extends State<TableauAudit> {
             SizedBox(height: 30),
             Center(
               child: SizedBox(
-                width: 200, // Largeur souhaitée pour le bouton
+                width: 200,
                 child: ElevatedButton(
                   onPressed: () {
                     _finishAudit();
                   },
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white, backgroundColor: Colors.orange, // Couleur du texte blanc
-                    minimumSize: Size(100, 60), // Taille minimale du bouton
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.orange,
+                    minimumSize: Size(100, 60),
                   ),
                   child: Text(
                     'Terminer',
-                    style: TextStyle(fontSize: 16), // Taille de police personnalisée
+                    style: TextStyle(fontSize: 16),
                   ),
                 ),
               ),
             ),
             SizedBox(height: 20),
-
-            // Affichage du total
             Padding(
               padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
               child: Text(
@@ -126,25 +128,27 @@ class _TableauAuditState extends State<TableauAudit> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _sendEmail,
+        tooltip: 'Envoyer un mail',
+        child: Icon(Icons.email),
+      ),
     );
   }
-
-
-
 
   DataRow _buildDataRow(int index) {
     return DataRow(cells: [
       DataCell(
         Container(
           padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          width: 750, // Augmentation de la largeur de la cellule
+          width: 750,
           decoration: BoxDecoration(
             color: index % 2 == 0 ? Colors.grey[200] : Colors.white,
           ),
           child: Text(
             _getLabelText(index),
             style: TextStyle(fontSize: 18, color: Colors.black),
-            softWrap: true, // Permettre le texte multiligne
+            softWrap: true,
           ),
         ),
       ),
@@ -236,7 +240,6 @@ class _TableauAuditState extends State<TableauAudit> {
     ]);
   }
 
-
   Future<void> _selectDate(BuildContext context, int index) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -279,28 +282,22 @@ class _TableauAuditState extends State<TableauAudit> {
   }
 
   Future<void> _finishAudit() async {
-    // Créer une liste pour stocker les actions, responsables et dates limites remplies
     List<String> actionsList = [];
     List<String> responsablesList = [];
     List<String> datesLimitesList = [];
 
-    // Parcourir les réponses pour chaque ligne du tableau
     for (int i = 0; i < _actions.length; i++) {
-      // Vérifier si une action a été renseignée pour cette ligne
       if (_actions[i] != null) {
         actionsList.add('action${i+1}: ${_actions[i]}');
       }
-      // Vérifier si un responsable a été renseigné pour cette ligne
       if (_responsables[i] != null) {
         responsablesList.add('responsable${i+1}: ${_responsables[i]}');
       }
-      // Vérifier si une date limite a été renseignée pour cette ligne
       if (_datesLimites[i] != null) {
         datesLimitesList.add('dateLimite${i+1}: ${_datesLimites[i]!.toIso8601String()}');
       }
     }
 
-    // Créer un objet Map pour stocker les données de l'audit
     Map<String, dynamic> auditData = {
       'nomAuditeur': widget.nomAuditeur,
       'date': widget.date,
@@ -312,8 +309,103 @@ class _TableauAuditState extends State<TableauAudit> {
       'total': (_checkboxValuesOk.where((value) => value == true).length / _checkboxValuesOk.length) * 100,
     };
 
-    // Sauvegarder les données de l'audit dans la base de données
     await _databaseRef.push().set(auditData);
+
+    // Informer l'utilisateur que les données ont été envoyées avec succès
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Succès'),
+          content: Text('Les données ont été envoyées avec succès à la base de données.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _sendEmail() async {
+    final dataSnapshot = await _databaseRef.child('rapporteurs').once();
+
+    final rapporteurs = dataSnapshot.snapshot.value;
+    final rapporteursMap = rapporteurs as Map<String, dynamic>;
+    final email = rapporteursMap['R1']['email'];
+
+    final emailBody = StringBuffer();
+    emailBody.writeln('Informations de l\'auditeur:');
+    emailBody.writeln('Nom de l\'auditeur: ${widget.nomAuditeur}');
+    emailBody.writeln('Service: ${widget.service}');
+    emailBody.writeln('Ilot: ${widget.ilot}');
+    emailBody.writeln('Date: ${widget.date}');
+    emailBody.writeln('Heure: ${widget.heure}');
+    emailBody.writeln('\nInformations du tableau:');
+    for (int i = 0; i < _actions.length; i++) {
+      emailBody.writeln('Action ${i + 1}: ${_actions[i] ?? 'N/A'}');
+      emailBody.writeln('Responsable ${i + 1}: ${_responsables[i] ?? 'N/A'}');
+      emailBody.writeln('Date limite ${i + 1}: ${_datesLimites[i]?.day}/${_datesLimites[i]?.month}/${_datesLimites[i]?.year ?? 'N/A'}');
+      emailBody.writeln('Réponse ${i + 1}: ${_checkboxValuesOk[i] == true ? 'OK' : (_checkboxValuesNonOk[i] == true ? 'Non OK' : 'N/A')}');
+      emailBody.writeln('------------------------------------------------');
+    }
+
+    final smtpServer = gmail('ghada.trabelssi.2000t@gmail.com', 'queen.ghada');
+
+    final message = Message()
+      ..from = Address('ghada.trabelssi.2000t@gmail.com', 'trabelssi ghada')
+      ..recipients.add(email)
+      ..subject = 'Rapport d\'audit'
+      ..text = emailBody.toString();
+
+    try {
+      final sendReport = await send(message, smtpServer);
+      print('Message envoyé: $sendReport');
+
+      // Afficher un message d'alerte pour informer l'utilisateur que l'e-mail a été envoyé avec succès
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Succès'),
+            content: Text('L\'e-mail a été envoyé avec succès à $email.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } on MailerException catch (e) {
+      print('Echec d\'envoi du message: $e');
+
+      // Afficher un message d'alerte pour informer l'utilisateur que l'envoi de l'e-mail a échoué
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Erreur'),
+            content: Text('Échec de l\'envoi de l\'e-mail. Veuillez réessayer plus tard.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
 }
