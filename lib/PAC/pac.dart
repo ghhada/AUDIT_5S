@@ -19,9 +19,7 @@ class _PACPageState extends State<PACPage> {
       Map<dynamic, dynamic>? values = event.snapshot.value as Map?;
       setState(() {
         items.add({...values!, 'key': event.snapshot.key});
-        if (items.length == 1) {
-          _loadActionStates();
-        }
+        _loadActionStates(); // Call _loadActionStates for each audit
       });
     });
   }
