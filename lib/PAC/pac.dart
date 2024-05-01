@@ -8,7 +8,8 @@ class PACPage extends StatefulWidget {
 }
 
 class _PACPageState extends State<PACPage> {
-  final DatabaseReference _auditsRef = FirebaseDatabase.instance.reference().child('audits');
+  final DatabaseReference _auditsRef =
+  FirebaseDatabase.instance.reference().child('audits');
   List<Map<dynamic, dynamic>> items = [];
   Map<int, Map<int, bool>> actionStates = {};
 
@@ -36,36 +37,32 @@ class _PACPageState extends State<PACPage> {
         savedStates[j] = savedState;
       }
       setState(() {
-        actionStates[items.indexWhere((item) => item['key'] == auditKey)] = savedStates;
+        actionStates[items.indexWhere((item) => item['key'] == auditKey)] =
+            savedStates;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double tableWidth = screenWidth - 350.0;
-
     return Scaffold(
       appBar: AppBar(
         title: Text('PAC'),
       ),
-      body: items.isEmpty
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
+      body: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 10.0),
+        child: SingleChildScrollView(
           child: DataTable(
             columnSpacing: 20,
+            headingRowColor: MaterialStateColor.resolveWith((states) => Colors.orange), // Couleur orange pour la ligne d'en-tête
             columns: [
-              DataColumn(label: SizedBox(width: tableWidth * 0.07, child: Text('Numéro'))),
-              DataColumn(label: SizedBox(width: tableWidth * 0.15, child: Text('Nom d\'auditeur'))),
-              DataColumn(label: SizedBox(width: tableWidth * 0.15, child: Text('Ilots'))),
-              DataColumn(label: SizedBox(width: tableWidth * 0.3, child: Text('Actions'))),
-              DataColumn(label: SizedBox(width: tableWidth * 0.15, child: Text('Responsable'))),
-              DataColumn(label: SizedBox(width: tableWidth * 0.15, child: Text('Date limite'))),
-              DataColumn(label: SizedBox(width: tableWidth * 0.08, child: Text('État d\'action'))),
+              DataColumn(label: Text('Numéro')),
+              DataColumn(label: Text('Nom d\'auditeur')),
+              DataColumn(label: Text('Ilots')),
+              DataColumn(label: Text('Actions')),
+              DataColumn(label: Text('Responsable')),
+              DataColumn(label: Text('Date limite')),
+              DataColumn(label: Text('État d\'action')),
             ],
             rows: items
                 .asMap()
@@ -91,43 +88,61 @@ class _PACPageState extends State<PACPage> {
                     datesLimites.add(_extractDate(item[key].toString()));
                   }
                 }
-                int maxRowCount = actions.length;
+                int maxRowCount =
+                [actions.length, responsables.length, datesLimites.length]
+                    .reduce((value, element) => value > element ? value : element);
                 for (int i = 0; i < maxRowCount; i++) {
+                  List<DataCell> cells = [
+                    DataCell(Text((index + 1).toString())),
+                    DataCell(i == 0 ? Text(nomAuditeur) : SizedBox.shrink()),
+                    DataCell(i == 0 ? Text(ilot) : SizedBox.shrink()),
+                  ];
+                  if (actions.length > i) {
+                    cells.add(DataCell(Text(actions[i])));
+                  } else {
+                    cells.add(DataCell(Text('N/A')));
+                  }
+                  if (responsables.length > i) {
+                    cells.add(DataCell(Text(responsables[i])));
+                  } else {
+                    cells.add(DataCell(Text('N/A')));
+                  }
+                  if (datesLimites.length > i) {
+                    cells.add(DataCell(Text(datesLimites[i])));
+                  } else {
+                    cells.add(DataCell(Text('N/A')));
+                  }
                   bool actionDone = actionStates[index]?[i] ?? false;
-                  rows.add(
-                    DataRow(
-                      cells: [
-                        DataCell(Text((index + 1).toString())),
-                        DataCell(i == 0 ? Text(nomAuditeur) : SizedBox.shrink()),
-                        DataCell(i == 0 ? Text(ilot) : SizedBox.shrink()),
-                        DataCell(Text(actions.length > i ? actions[i] : 'N/A')),
-                        DataCell(Text(responsables.length > i ? responsables[i] : 'N/A')),
-                        DataCell(Text(datesLimites.length > i ? datesLimites[i] : 'N/A')),
-                        DataCell(
-                          Row(
-                            children: [
-                              Text(actionDone ? 'Done' : 'En cours', style: TextStyle(color: actionDone ? Colors.green : Colors.yellow)),
-                              Switch(
-                                value: actionDone,
-                                activeColor: Colors.green,
-                                inactiveTrackColor: Colors.yellow,
-                                onChanged: (bool value) {
-                                  setState(() {
-                                    if (actionStates.containsKey(index)) {
-                                      actionStates[index]![i] = value;
-                                    } else {
-                                      actionStates[index] = {i: value};
-                                    }
-                                    updateActionState(index, i, value);
-                                  });
-                                },
-                              ),
-                            ],
+                  cells.add(
+                    DataCell(
+                      Row(
+                        children: [
+                          Text(
+                            actionDone ? 'Done' : 'En cours',
+                            style: TextStyle(
+                              color: actionDone ? Colors.green : Colors.yellow,
+                            ),
                           ),
-                        ),
-                      ],
+                          Switch(
+                            value: actionDone,
+                            activeColor: Colors.green,
+                            inactiveTrackColor: Colors.yellow,
+                            onChanged: (bool value) {
+                              setState(() {
+                                if (actionStates.containsKey(index)) {
+                                  actionStates[index]?[i] = value;
+                                } else {
+                                  actionStates[index] = {i: value};
+                                }
+                                updateActionState(index, i, value);
+                              });
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   );
+                  rows.add(DataRow(cells: cells));
                 }
                 return rows;
               },

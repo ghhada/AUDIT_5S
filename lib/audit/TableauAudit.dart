@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:mailer/mailer.dart';
-import 'package:mailer/smtp_server.dart';
 
 class TableauAudit extends StatefulWidget {
   final String nomAuditeur;
@@ -42,23 +40,23 @@ class _TableauAuditState extends State<TableauAudit> {
     _datesLimites = List.generate(10, (index) => null);
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Tableau Audit'),
       ),
-      backgroundColor: Colors.blue, // Changement de la couleur de fond en bleu
+      backgroundColor: Color(0xFF060D3A),
       body: SingleChildScrollView(
         scrollDirection: Axis.vertical,
-        child: ListView(
-          shrinkWrap: true,
+        child: Column(
           children: [
             SizedBox(height: 20),
             Center(
               child: SizedBox(
                 width: 300,
                 child: Card(
-                  color: Colors.orange, // Changement de la couleur du Card en orange
+                  color: Colors.orange,
                   elevation: 4,
                   margin: EdgeInsets.all(8),
                   child: Padding(
@@ -68,7 +66,7 @@ class _TableauAuditState extends State<TableauAudit> {
                       children: [
                         Text(
                           'Informations de l\'auditeur',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white), // Changement de la couleur du texte en blanc
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                         SizedBox(height: 8),
                         Text('Nom de l\'auditeur: ${widget.nomAuditeur}', style: TextStyle(color: Colors.white)),
@@ -85,16 +83,19 @@ class _TableauAuditState extends State<TableauAudit> {
             SizedBox(height: 20),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: DataTable(
-                dataRowHeight: 80,
-                columns: [
-                  DataColumn(label: SizedBox(width: 550, child: Text('Critères de maintien', style: TextStyle(fontSize: 30, color: Colors.white)))),
-                  DataColumn(label: SizedBox(width: 250, child: Text('Réponse', style: TextStyle(fontSize: 30, color: Colors.white)))),
-                  DataColumn(label: SizedBox(width: 250, child: Text('Actions', style: TextStyle(fontSize: 30, color: Colors.white)))),
-                  DataColumn(label: SizedBox(width: 250, child: Text('Responsable', style: TextStyle(fontSize: 30, color: Colors.white)))),
-                  DataColumn(label: SizedBox(width: 250, child: Text('Date limite', style: TextStyle(fontSize: 30, color: Colors.white)))),
-                ],
-                rows: List.generate(10, (index) => _buildDataRow(index)),
+              child: Container(
+                color: Colors.white, // Fond du tableau en blanc
+                child: DataTable(
+                  dataRowHeight: 80,
+                  columns: [
+                    DataColumn(label: SizedBox(width: 550, child: Text('Critères de maintien', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                    DataColumn(label: SizedBox(width: 250, child: Text('Réponse', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                    DataColumn(label: SizedBox(width: 250, child: Text('Actions', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                    DataColumn(label: SizedBox(width: 250, child: Text('Responsable', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                    DataColumn(label: SizedBox(width: 250, child: Text('Date limite', style: TextStyle(fontSize: 30, color: Colors.black)))),
+                  ],
+                  rows: List.generate(10, (index) => _buildDataRow(index)),
+                ),
               ),
             ),
             SizedBox(height: 30),
@@ -127,11 +128,6 @@ class _TableauAuditState extends State<TableauAudit> {
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _sendEmail,
-        tooltip: 'Envoyer un mail',
-        child: Icon(Icons.email),
       ),
     );
   }
@@ -311,7 +307,6 @@ class _TableauAuditState extends State<TableauAudit> {
 
     await _databaseRef.push().set(auditData);
 
-    // Informer l'utilisateur que les données ont été envoyées avec succès
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -330,84 +325,6 @@ class _TableauAuditState extends State<TableauAudit> {
       },
     );
   }
-
-  Future<void> _sendEmail() async {
-    final dataSnapshot = await _databaseRef.child('rapporteurs').once();
-
-    final rapporteurs = dataSnapshot.snapshot.value;
-    final rapporteursMap = rapporteurs as Map<String, dynamic>;
-    final email = rapporteursMap['R1']['email'];
-
-    final emailBody = StringBuffer();
-    emailBody.writeln('Informations de l\'auditeur:');
-    emailBody.writeln('Nom de l\'auditeur: ${widget.nomAuditeur}');
-    emailBody.writeln('Service: ${widget.service}');
-    emailBody.writeln('Ilot: ${widget.ilot}');
-    emailBody.writeln('Date: ${widget.date}');
-    emailBody.writeln('Heure: ${widget.heure}');
-    emailBody.writeln('\nInformations du tableau:');
-    for (int i = 0; i < _actions.length; i++) {
-      emailBody.writeln('Action ${i + 1}: ${_actions[i] ?? 'N/A'}');
-      emailBody.writeln('Responsable ${i + 1}: ${_responsables[i] ?? 'N/A'}');
-      emailBody.writeln('Date limite ${i + 1}: ${_datesLimites[i]?.day}/${_datesLimites[i]?.month}/${_datesLimites[i]?.year ?? 'N/A'}');
-      emailBody.writeln('Réponse ${i + 1}: ${_checkboxValuesOk[i] == true ? 'OK' : (_checkboxValuesNonOk[i] == true ? 'Non OK' : 'N/A')}');
-      emailBody.writeln('------------------------------------------------');
-    }
-
-    final smtpServer = gmail('ghada.trabelssi.2000t@gmail.com', 'queen.ghada');
-
-    final message = Message()
-      ..from = Address('ghada.trabelssi.2000t@gmail.com', 'trabelssi ghada')
-      ..recipients.add(email)
-      ..subject = 'Rapport d\'audit'
-      ..text = emailBody.toString();
-
-    try {
-      final sendReport = await send(message, smtpServer);
-      print('Message envoyé: $sendReport');
-
-      // Afficher un message d'alerte pour informer l'utilisateur que l'e-mail a été envoyé avec succès
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Succès'),
-            content: Text('L\'e-mail a été envoyé avec succès à $email.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-    } on MailerException catch (e) {
-      print('Echec d\'envoi du message: $e');
-
-      // Afficher un message d'alerte pour informer l'utilisateur que l'envoi de l'e-mail a échoué
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Erreur'),
-            content: Text('Échec de l\'envoi de l\'e-mail. Veuillez réessayer plus tard.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-    }
-  }
-
 }
 
 void main() async {
