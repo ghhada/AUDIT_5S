@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 import '../HOME_LOGIN/homelogin.dart';
 
@@ -8,12 +9,113 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  static const String ADMIN_USERNAME = "admin";
-  static const String ADMIN_PASSWORD = "admin";
-
   TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool passwordVisible = false;
+  final databaseReference = FirebaseDatabase.instance.reference();
+
+  Future<void> _login() async {
+    String username = usernameController.text;
+    String password = passwordController.text;
+
+    DataSnapshot snapshot = await databaseReference.child('rapporteurs').get();
+    bool userFound = false;
+
+    if (snapshot.exists) {
+      Map<dynamic, dynamic> rapporteurs = snapshot.value as Map<dynamic, dynamic>;
+      rapporteurs.forEach((key, value) {
+        if (value['nom'] == username && value['motDePasse'] == password) {
+          userFound = true;
+        }
+      });
+    }
+
+    if (userFound) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => HomeLogin()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Nom d\'utilisateur ou mot de passe incorrect'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Mot de passe oublié"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: usernameController,
+                decoration: InputDecoration(labelText: 'Nom d\'utilisateur'),
+              ),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(labelText: 'Nouveau mot de passe'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                // Récupérer les informations entrées par l'utilisateur
+                String username = usernameController.text;
+                String newPassword = passwordController.text;
+
+                // Vérifier si les informations sont correctes dans la base de données
+                DataSnapshot snapshot = await databaseReference.child('rapporteurs').get();
+                bool userFound = false;
+
+                if (snapshot.exists) {
+                  Map<dynamic, dynamic> rapporteurs = snapshot.value as Map<dynamic, dynamic>;
+                  rapporteurs.forEach((key, value) {
+                    if (value['nom'] == username) {
+                      userFound = true;
+                      // Mettre à jour le mot de passe dans la base de données
+                      databaseReference.child('rapporteurs').child(key).update({'motDePasse': newPassword});
+                    }
+                  });
+                }
+
+                if (userFound) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Mot de passe mis à jour avec succès'),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Nom d\'utilisateur incorrect'),
+                    ),
+                  );
+                }
+
+                Navigator.of(context).pop(); // Fermer la boîte de dialogue
+              },
+              child: Text('Enregistrer'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Fermer la boîte de dialogue
+              },
+              child: Text('Annuler'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +124,7 @@ class _LoginState extends State<Login> {
         title: Text('Login'),
       ),
       body: Container(
-        color: Color(0xFF060D3A), // Couleur d'arrière-plan #10127DFF
+        color: Color(0xFF060D3A),
         child: Center(
           child: Container(
             width: MediaQuery.of(context).size.width * 0.8,
@@ -64,28 +166,21 @@ class _LoginState extends State<Login> {
                       ),
                     ),
                     SizedBox(height: 20.0),
-                    ElevatedButton(
-                      onPressed: () {
-                        String username = usernameController.text;
-                        String password = passwordController.text;
-
-                        if (username == ADMIN_USERNAME && password == ADMIN_PASSWORD) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => HomeLogin()),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Nom d\'utilisateur ou mot de passe incorrect'),
-                            ),
-                          );
-                        }
-                      },
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(Colors.orange),
-                      ),
-                      child: Text('Se connecter', style: TextStyle(color: Colors.white)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: _forgotPassword,
+                          child: Text('Mot de passe oublié?', style: TextStyle(color: Colors.orange)),
+                        ),
+                        ElevatedButton(
+                          onPressed: _login,
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(Colors.orange),
+                          ),
+                          child: Text('Se connecter', style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
                     ),
                   ],
                 ),

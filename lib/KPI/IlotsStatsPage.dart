@@ -94,13 +94,13 @@ class _AllDataPageState extends State<AllDataPage> {
         colorFn: (Ilot ilot, _) {
           switch (ilot.key) {
             case 'Certifié':
-              return charts.ColorUtil.fromDartColor(Colors.lightGreen[100]!);
+              return charts.ColorUtil.fromDartColor(Colors.lightGreen[200]!);
             case 'En cours':
-              return charts.ColorUtil.fromDartColor(Colors.yellow[100]!);
+              return charts.ColorUtil.fromDartColor(Colors.yellow[200]!);
             case 'Non certifié':
-              return charts.ColorUtil.fromDartColor(Colors.red[100]!);
+              return charts.ColorUtil.fromDartColor(Colors.red[200]!);
             default:
-              return charts.ColorUtil.fromDartColor(Colors.lightGreen[100]!);
+              return charts.ColorUtil.fromDartColor(Colors.lightGreen[200]!);
           }
         },
         labelAccessorFn: (Ilot ilot, _) => '${ilot.key}: ${ilot.etat}',
@@ -111,7 +111,6 @@ class _AllDataPageState extends State<AllDataPage> {
         },
       ),
     ];
-
   }
 
   List<fl.PieChartSectionData> _createDataFLChart() {
@@ -237,7 +236,6 @@ class _AllDataPageState extends State<AllDataPage> {
     }
   }
 
-
   Widget _buildChartLabel(String label, double percentage) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -260,6 +258,7 @@ class _AllDataPageState extends State<AllDataPage> {
       ],
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -277,7 +276,10 @@ class _AllDataPageState extends State<AllDataPage> {
             children: [
               Text(
                 'Graphiques des Ilots',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
               SizedBox(height: 20),
               _buildChartWidget(),
@@ -287,9 +289,6 @@ class _AllDataPageState extends State<AllDataPage> {
       ),
     );
   }
-
-
-
 }
 
 void main() async {

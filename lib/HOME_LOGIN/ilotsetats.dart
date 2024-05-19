@@ -63,12 +63,23 @@ class _IlotsEtatsState extends State<IlotsEtats> {
     });
   }
 
-  void _modifierIlot(String key, String etat) {
+  void _modifierIlot(String key, String nouveauNom, String nouvelEtat) {
     final databaseReference = FirebaseDatabase.instance.reference().child('ilots');
-    databaseReference.child(key).update({'etat': etat}).then((_) {
+    databaseReference.child(key).update({
+      'nom': nouveauNom,
+      'etat': nouvelEtat,
+    }).then((_) {
+      // Mettre à jour l'état local des îlots
+      setState(() {
+        final ilotIndex = ilots.indexWhere((ilot) => ilot.key == key);
+        if (ilotIndex != -1) {
+          ilots[ilotIndex].nom = nouveauNom;
+          ilots[ilotIndex].etat = nouvelEtat;
+        }
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("État de l'ilot modifié avec succès"),
+          content: Text("Ilot modifié avec succès"),
           backgroundColor: Colors.green,
         ),
       );
@@ -82,6 +93,7 @@ class _IlotsEtatsState extends State<IlotsEtats> {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,8 +106,9 @@ class _IlotsEtatsState extends State<IlotsEtats> {
           final ilot = ilots[index];
           return IlotCard(
             ilot: ilot,
-            onUpdate: (etat) => _modifierIlot(ilot.key, etat),
+            onUpdate: (etat) => _modifierIlot(ilot.key, ilot.nom, etat), // Utiliser le nom actuel de l'îlot
             onDelete: () => _supprimerIlot(ilot.key),
+            onEdit: () => _modifierIlotDialog(context, ilot), // Utiliser une boîte de dialogue pour la modification
           );
         },
       ),
@@ -103,9 +116,9 @@ class _IlotsEtatsState extends State<IlotsEtats> {
         onPressed: _ajouterIlot,
         tooltip: 'Ajouter un ilot',
         child: Icon(Icons.add),
-        backgroundColor: Colors.orange, // Modifier la couleur du bouton flottant en orange
+        backgroundColor: Colors.orange,
       ),
-      backgroundColor: Color(0xFF060D3A), // Modifier la couleur de l'arrière-plan
+      backgroundColor: Color(0xFF060D3A),
     );
   }
 
@@ -134,9 +147,8 @@ class _IlotsEtatsState extends State<IlotsEtats> {
               onPressed: () {
                 String nouveauNom = _nomController.text.trim();
                 if (nouveauNom.isNotEmpty) {
-                  // Ajoutez ici la logique pour ajouter un nouvel îlot
                   final databaseReference = FirebaseDatabase.instance.reference().child('ilots');
-                  String nouvelEtat = 'non certifié'; // État par défaut pour le nouvel îlot
+                  String nouvelEtat = 'non certifié';
 
                   databaseReference.push().set({
                     'nom': nouveauNom,
@@ -148,7 +160,7 @@ class _IlotsEtatsState extends State<IlotsEtats> {
                         backgroundColor: Colors.green,
                       ),
                     );
-                    Navigator.of(context).pop(); // Fermer la boîte de dialogue après l'ajout
+                    Navigator.of(context).pop();
                   }).catchError((error) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -173,17 +185,85 @@ class _IlotsEtatsState extends State<IlotsEtats> {
       },
     );
   }
+
+  void _modifierIlotDialog(BuildContext context, Ilot ilot) {
+    TextEditingController _nomController = TextEditingController(text: ilot.nom);
+    String _selectedEtat = ilot.etat;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Modifier l\'îlot'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _nomController,
+                decoration: InputDecoration(
+                  labelText: 'Nouveau nom de l\'îlot',
+                ),
+              ),
+              SizedBox(height: 20),
+              DropdownButton<String>(
+                value: _selectedEtat,
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedEtat = newValue!;
+                  });
+                },
+                items: <String>['certifié', 'en cours', 'non certifié'].map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                String nouveauNom = _nomController.text.trim();
+                if (nouveauNom.isNotEmpty) {
+                  _modifierIlot(ilot.key, nouveauNom, _selectedEtat);
+                  Navigator.of(context).pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Veuillez saisir le nouveau nom de l'îlot"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: Text('Enregistrer'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class IlotCard extends StatefulWidget {
   final Ilot ilot;
   final Function(String) onUpdate;
   final VoidCallback onDelete;
+  final VoidCallback onEdit;
 
   const IlotCard({
     required this.ilot,
     required this.onUpdate,
     required this.onDelete,
+    required this.onEdit,
   });
 
   @override
@@ -204,15 +284,34 @@ class _IlotCardState extends State<IlotCard> {
     return Card(
       elevation: 4,
       margin: EdgeInsets.all(8),
-      color: Color(0xFF232D61), // Modifier la couleur de la carte
+      color: Color(0xFF232D61),
       child: Padding(
         padding: EdgeInsets.all(10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              'Nom d\'ilot: ${widget.ilot.nom}',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Roboto', color: Colors.white), // Modifier la couleur du texte
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Nom d\'îlot: ${widget.ilot.nom}',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Roboto', color: Colors.white),
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.edit),
+                      onPressed: widget.onEdit,
+                      color: Colors.orange,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete_outline),
+                      onPressed: widget.onDelete,
+                      color: Colors.red,
+                    ),
+                  ],
+                ),
+              ],
             ),
             SizedBox(height: 10),
             Wrap(
@@ -227,7 +326,7 @@ class _IlotCardState extends State<IlotCard> {
                       widget.onUpdate('certifié');
                     }
                   },
-                  selectedColor: Colors.green, // Couleur différente pour les états choisis
+                  selectedColor: Colors.green,
                 ),
                 ChoiceChip(
                   label: Text('En cours'),
@@ -238,7 +337,7 @@ class _IlotCardState extends State<IlotCard> {
                       widget.onUpdate('en cours');
                     }
                   },
-                  selectedColor: Colors.orange, // Couleur différente pour les états choisis
+                  selectedColor: Colors.orange,
                 ),
                 ChoiceChip(
                   label: Text('Non certifié'),
@@ -249,15 +348,9 @@ class _IlotCardState extends State<IlotCard> {
                       widget.onUpdate('non certifié');
                     }
                   },
-                  selectedColor: Colors.red, // Couleur différente pour les états choisis
+                  selectedColor: Colors.red,
                 ),
               ],
-            ),
-            SizedBox(height: 10),
-            IconButton(
-              icon: Icon(Icons.delete_outline),
-              onPressed: widget.onDelete,
-              color: Colors.red,
             ),
           ],
         ),
@@ -265,6 +358,7 @@ class _IlotCardState extends State<IlotCard> {
     );
   }
 }
+
 
 void main() {
   runApp(MaterialApp(

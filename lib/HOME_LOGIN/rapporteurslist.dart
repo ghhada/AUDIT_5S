@@ -6,8 +6,9 @@ class Rapporteur {
   String nom;
   String email;
   String domaine;
+  String motDePasse;
 
-  Rapporteur({required this.key, required this.nom, required this.email, required this.domaine});
+  Rapporteur({required this.key, required this.nom, required this.email, required this.domaine, required this.motDePasse});
 }
 
 class RapporteursList extends StatefulWidget {
@@ -34,6 +35,7 @@ class _RapporteursListState extends State<RapporteursList> {
           nom: values['nom'] ?? '',
           email: values['email'] ?? '',
           domaine: values['domaine'] ?? '',
+          motDePasse: values['motDePasse'] ?? '',
         );
         setState(() {
           rapporteurs.add(rapporteur);
@@ -102,72 +104,96 @@ class _RapporteursListState extends State<RapporteursList> {
     TextEditingController nomController = TextEditingController(text: rapporteurAModifier.nom);
     TextEditingController emailController = TextEditingController(text: rapporteurAModifier.email);
     TextEditingController domaineController = TextEditingController(text: rapporteurAModifier.domaine);
+    TextEditingController motDePasseController = TextEditingController(text: rapporteurAModifier.motDePasse);
+    bool _passwordVisible = false;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Modifier le rapporteur"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              TextField(
-                controller: nomController,
-                decoration: InputDecoration(labelText: 'Nom'),
-              ),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(labelText: 'Email'),
-              ),
-              TextField(
-                controller: domaineController,
-                decoration: InputDecoration(labelText: 'Domaine'),
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text("Annuler"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text("Enregistrer"),
-              onPressed: () {
-                String nom = nomController.text.trim();
-                String email = emailController.text.trim();
-                String domaine = domaineController.text.trim();
-
-                if (nom.isNotEmpty && email.isNotEmpty && domaine.isNotEmpty) {
-                  rapporteurAModifier.nom = nom;
-                  rapporteurAModifier.email = email;
-                  rapporteurAModifier.domaine = domaine;
-                  _enregistrerModifications(rapporteurAModifier);
-                  setState(() {}); // Rafraîchit l'interface utilisateur
-                  Navigator.of(context).pop();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Veuillez remplir tous les champs"),
-                      backgroundColor: Colors.red,
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: Text("Modifier le rapporteur"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextField(
+                    controller: nomController,
+                    decoration: InputDecoration(labelText: 'Nom'),
+                  ),
+                  TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(labelText: 'Email'),
+                  ),
+                  TextField(
+                    controller: domaineController,
+                    decoration: InputDecoration(labelText: 'Domaine'),
+                  ),
+                  TextField(
+                    controller: motDePasseController,
+                    obscureText: !_passwordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'Mot de passe',
+                      suffixIcon: IconButton(
+                        icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                      ),
                     ),
-                  );
-                }
-              },
-            ),
-          ],
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text("Annuler"),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: Text("Enregistrer"),
+                  onPressed: () {
+                    String nom = nomController.text.trim();
+                    String email = emailController.text.trim();
+                    String domaine = domaineController.text.trim();
+                    String motDePasse = motDePasseController.text.trim();
+
+                    if (nom.isNotEmpty && email.isNotEmpty && domaine.isNotEmpty) {
+                      rapporteurAModifier.nom = nom;
+                      rapporteurAModifier.email = email;
+                      rapporteurAModifier.domaine = domaine;
+                      rapporteurAModifier.motDePasse = motDePasse;
+                      _enregistrerModifications(rapporteurAModifier, index);
+
+                      Navigator.of(context).pop();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Veuillez remplir tous les champs"),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
 
-  void _enregistrerModifications(Rapporteur rapporteur) {
+  void _enregistrerModifications(Rapporteur rapporteur, int index) {
     final databaseReference = FirebaseDatabase.instance.reference().child('rapporteurs');
-    databaseReference.child(rapporteur.key).set({
+    databaseReference.child(rapporteur.key).update({
       'nom': rapporteur.nom,
       'email': rapporteur.email,
       'domaine': rapporteur.domaine,
+      'motDePasse': rapporteur.motDePasse, // Mettre à jour le mot de passe dans la base de données
     }).then((_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -175,6 +201,11 @@ class _RapporteursListState extends State<RapporteursList> {
           backgroundColor: Colors.green,
         ),
       );
+
+      // Mise à jour de la liste des rapporteurs une fois les modifications enregistrées
+      setState(() {
+        rapporteurs[index] = rapporteur;
+      });
     }).catchError((error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -189,69 +220,92 @@ class _RapporteursListState extends State<RapporteursList> {
     TextEditingController nomController = TextEditingController();
     TextEditingController emailController = TextEditingController();
     TextEditingController domaineController = TextEditingController();
+    TextEditingController motDePasseController = TextEditingController();
+    bool _passwordVisible = false;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Ajouter un rapporteur"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              TextField(
-                controller: nomController,
-                decoration: InputDecoration(labelText: 'Nom'),
-              ),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(labelText: 'Email'),
-              ),
-              TextField(
-                controller: domaineController,
-                decoration: InputDecoration(labelText: 'Domaine'),
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text("Annuler"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text("Ajouter"),
-              onPressed: () {
-                String nom = nomController.text.trim();
-                String email = emailController.text.trim();
-                String domaine = domaineController.text.trim();
-
-                if (nom.isNotEmpty && email.isNotEmpty && domaine.isNotEmpty) {
-                  _enregistrerNouveauRapporteur(nom, email, domaine);
-                  setState(() {}); // Rafraîchit l'interface utilisateur
-                  Navigator.of(context).pop();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Veuillez remplir tous les champs"),
-                      backgroundColor: Colors.red,
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: Text("Ajouter un rapporteur"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextField(
+                    controller: nomController,
+                    decoration: InputDecoration(labelText: 'Nom'),
+                  ),
+                  TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(labelText: 'Email'),
+                  ),
+                  TextField(
+                    controller: domaineController,
+                    decoration: InputDecoration(labelText: 'Domaine'),
+                  ),
+                  TextField(
+                    controller: motDePasseController,
+                    obscureText: !_passwordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'Mot de passe',
+                      suffixIcon: IconButton(
+                        icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                      ),
                     ),
-                  );
-                }
-              },
-            ),
-          ],
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text("Annuler"),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: Text("Ajouter"),
+                  onPressed: () {
+                    String nom = nomController.text.trim();
+                    String email = emailController.text.trim();
+                    String domaine = domaineController.text.trim();
+                    String motDePasse = motDePasseController.text.trim();
+
+                    if (nom.isNotEmpty && email.isNotEmpty && domaine.isNotEmpty) {
+                      _enregistrerNouveauRapporteur(nom, email, domaine, motDePasse);
+                      setState(() {});
+                      Navigator.of(context).pop();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Veuillez remplir tous les champs"),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
 
-  void _enregistrerNouveauRapporteur(String nom, String email, String domaine) {
+  void _enregistrerNouveauRapporteur(String nom, String email, String domaine, String motDePasse) {
     final databaseReference = FirebaseDatabase.instance.reference().child('rapporteurs');
     databaseReference.push().set({
       'nom': nom,
       'email': email,
       'domaine': domaine,
+      'motDePasse': motDePasse,
     }).then((_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -294,14 +348,14 @@ class _RapporteursListState extends State<RapporteursList> {
         onPressed: _ajouterRapporteur,
         tooltip: 'Ajouter un rapporteur',
         child: Icon(Icons.add),
-        backgroundColor: Colors.orange, // Modifier la couleur du bouton flottant en orange
+        backgroundColor: Colors.orange,
       ),
-      backgroundColor: Color(0xFF060D3A), // Modifier la couleur de l'arrière-plan
+      backgroundColor: Color(0xFF060D3A),
     );
   }
 }
 
-class RapporteurCard extends StatelessWidget {
+class RapporteurCard extends StatefulWidget {
   final Rapporteur rapporteur;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
@@ -313,10 +367,17 @@ class RapporteurCard extends StatelessWidget {
   });
 
   @override
+  _RapporteurCardState createState() => _RapporteurCardState();
+}
+
+class _RapporteurCardState extends State<RapporteurCard> {
+  bool _passwordVisible = false;
+
+  @override
   Widget build(BuildContext context) {
     Color color;
     Color textColor;
-    switch (rapporteur.domaine) {
+    switch (widget.rapporteur.domaine) {
       case 'Domaine 1':
         color = Colors.lightBlue[100]!;
         textColor = Colors.black;
@@ -341,21 +402,37 @@ class RapporteurCard extends StatelessWidget {
       color: color,
       child: ListTile(
         title: Text(
-          'Nom: ${rapporteur.nom}',
+          'Nom: ${widget.rapporteur.nom}',
           style: TextStyle(color: textColor),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Email: ${rapporteur.email}',
+              'Email: ${widget.rapporteur.email}',
               style: TextStyle(color: textColor),
             ),
             Text(
-              'Service: ${rapporteur.domaine}',
+              'Service: ${widget.rapporteur.domaine}',
               style: TextStyle(
                 color: textColor.withOpacity(0.8),
               ),
+            ),
+            Row(
+              children: [
+                Text(
+                  'Mot de passe: ${_passwordVisible ? widget.rapporteur.motDePasse : '********'}',
+                  style: TextStyle(color: textColor),
+                ),
+                IconButton(
+                  icon: Icon(_passwordVisible ? Icons.visibility_off : Icons.visibility),
+                  onPressed: () {
+                    setState(() {
+                      _passwordVisible = !_passwordVisible;
+                    });
+                  },
+                ),
+              ],
             ),
           ],
         ),
@@ -363,12 +440,12 @@ class RapporteurCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: Icon(Icons.edit, color: Colors.orange), // Modifier icône en orange
-              onPressed: onEdit,
+              icon: Icon(Icons.edit, color: Colors.orange),
+              onPressed: widget.onEdit,
             ),
             IconButton(
-              icon: Icon(Icons.delete, color: Colors.orange), // Supprimer icône en orange
-              onPressed: onDelete,
+              icon: Icon(Icons.delete, color: Colors.orange),
+              onPressed: widget.onDelete,
             ),
           ],
         ),
