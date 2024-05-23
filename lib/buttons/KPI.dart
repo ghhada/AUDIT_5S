@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../KPI/IlotsStatsPage.dart';
-import '../KPI/AuditeursPage.dart'; // Importez la page des auditeurs
-// Importez la page des lots
+import '../KPI/AuditeursPage.dart';
 import '../KPI/Suivisdesilots.dart';
+import '../KPI/planningannel.dart';
 
 class Button3Page extends StatelessWidget {
   @override
@@ -46,12 +46,12 @@ class Button3Page extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => DebutAuditPage()), // Utilisez la page des auditeurs
+                      MaterialPageRoute(builder: (context) => DebutAuditPage()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
                     fixedSize: Size(200.0, 60.0),
-                    backgroundColor: Colors.blue, // Couleur de fond bleue pour le bouton des auditeurs
+                    backgroundColor: Colors.blue,
                   ),
                   child: Text(
                     'Suivis des Auditeurs',
@@ -68,15 +68,37 @@ class Button3Page extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => SuiviIlotPage()), // Utilisez la page des lots
+                      MaterialPageRoute(builder: (context) => SuiviIlotPage()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
                     fixedSize: Size(200.0, 60.0),
-                    backgroundColor: Colors.green, // Couleur de fond verte pour le bouton des lots
+                    backgroundColor: Colors.green,
                   ),
                   child: Text(
                     'Suivis des ilots',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              SizedBox(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => PlanningAnnuel()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    fixedSize: Size(200.0, 60.0),
+                    backgroundColor: Colors.purple, // Couleur de fond violette pour le bouton du planning annuel
+                  ),
+                  child: Text(
+                    'Planning Annuel',
                     style: TextStyle(
                       fontSize: 16.0,
                       color: Colors.white,

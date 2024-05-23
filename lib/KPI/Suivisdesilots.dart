@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart' as fl;
 
 class Ilot {
   final String id;
@@ -22,6 +23,9 @@ class _SuiviIlotPageState extends State<SuiviIlotPage> {
   Map<String, String> ilotsServices = {};
   Map<String, Map<String, int>> ilotData = {};
   List<charts.Series<HistogramData, String>> seriesList = [];
+  int totalAudits = 0;
+  int auditsCeMois = 0;
+
 
   @override
   void initState() {
@@ -70,10 +74,14 @@ class _SuiviIlotPageState extends State<SuiviIlotPage> {
                 auditCounts.update(month, (value) => value + 1, ifAbsent: () => 1);
               }
             });
-
+            // Calculer le nombre d'audits pour ce mois-ci
+            final currentMonth = DateTime.now().month;
+            final currentYear = DateTime.now().year;
+            auditsCeMois = auditCounts[DateFormat('MMMM').format(DateTime(currentYear, currentMonth))] ?? 0;
             setState(() {
               ilotData[ilot] = Map.from(auditCounts);
               _updateChartData(ilot);
+              _updatePieCharts();
             });
           } else {
             print('No audit data available.');
@@ -85,8 +93,8 @@ class _SuiviIlotPageState extends State<SuiviIlotPage> {
     } catch (error) {
       print('Error fetching audit data: $error');
     }
-  }
 
+  }
 
   void _updateChartData(String ilot) {
     final data = ilotData[ilot]!.entries.map((entry) => HistogramData(entry.key, entry.value)).toList();
@@ -97,8 +105,19 @@ class _SuiviIlotPageState extends State<SuiviIlotPage> {
           domainFn: (HistogramData data, _) => data.category,
           measureFn: (HistogramData data, _) => data.value.toDouble(),
           data: data,
-        )..setAttribute(charts.rendererIdKey, 'customBarRenderer'), // Ajoutez cette ligne pour attribuer un identifiant au renderer
+        )..setAttribute(charts.rendererIdKey, 'customBarRenderer'), // Utilisez l'identifiant personnalisé
       ];
+    });
+  }
+
+  void _updatePieCharts() {
+    int totalAuditsForIlot = 0;
+    ilotData[selectedIlot!]!.forEach((_, value) {
+      totalAuditsForIlot += value;
+    });
+
+    setState(() {
+      totalAudits = totalAuditsForIlot;
     });
   }
 
@@ -227,6 +246,293 @@ class _SuiviIlotPageState extends State<SuiviIlotPage> {
                 ),
               ),
             ),
+            // Affichage de la troisième PieChart
+
+            Container(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Text(
+                    'Les audits du ${DateFormat('MMMM').format(DateTime.now())}, \ NB: chaque ilot doit etre audité 4 fois par mois ',
+
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Stack(
+                    children: [
+                      SizedBox(
+                        height: 200, // Définir une hauteur fixe pour le PieChart
+                        child: fl.PieChart(
+                          fl.PieChartData(
+                            sectionsSpace: 0,
+                            sections: auditsCeMois > 0 ? [
+                              fl.PieChartSectionData(
+                                value: (auditsCeMois / 4) * 100, // Audits de ce mois-ci, divisés par 4
+                                color: Colors.yellow,
+                                radius: 50,
+                                title: '${((auditsCeMois / 4) * 100).toStringAsFixed(2)}%', // Affichage du pourcentage
+                                titleStyle: TextStyle(color: Colors.white), // Couleur du texte des pourcentages
+                              ),
+                              fl.PieChartSectionData(
+                                value: 100 - ((auditsCeMois / 4) * 100), // Reste du pourcentage
+                                color: Colors.grey,
+                                radius: 50,
+                                title: '${(100 - ((auditsCeMois / 4) * 100)).toStringAsFixed(2)}%', // Affichage du pourcentage
+                                titleStyle: TextStyle(color: Colors.white), // Couleur du texte des pourcentages
+                              ),
+                            ] : [
+                              fl.PieChartSectionData(
+                                value: 100, // En cas de zéro audits
+                                color: Colors.grey,
+                                radius: 50,
+                                title: '0%', // Affichage du pourcentage
+                                titleStyle: TextStyle(color: Colors.white), // Couleur du texte des pourcentages
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Positionnement du texte explicatif
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Container(
+                                  height: 10,
+                                  width: 10,
+                                  color: Colors.yellow,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Les audits faites au mois du  ${DateFormat('MMMM').format(DateTime.now())}',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Container(
+                                  height: 10,
+                                  width: 10,
+                                  color: Colors.grey,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Les audits non faites au mois du mais ',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Affichage de la deuxième PieChart
+            Container(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Text(
+                    'Les audits faites dés le but de l annee jusqu au mois de  ${DateFormat('MMMM').format(DateTime.now())}',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Stack(
+                    children: [
+                      SizedBox(
+                        height: 200, // Définir une hauteur fixe pour le PieChart
+                        child: fl.PieChart(
+                          fl.PieChartData(
+                            sectionsSpace: 0,
+                            sections: totalAudits > 0 ? [
+                              fl.PieChartSectionData(
+                                value: (totalAudits / (4* DateTime.now().month)) * 100, // Pourcentage par rapport au mois actuel
+                                color: Colors.blue,
+                                radius: 50,
+                                title: '${((totalAudits /(4* DateTime.now().month)) * 100).toStringAsFixed(2)}%', // Affichage du pourcentage
+                                titleStyle: TextStyle(color: Colors.white), // Couleur du texte des pourcentages
+                              ),
+                              fl.PieChartSectionData(
+                                value: (100 - (totalAudits / (4* DateTime.now().month)) * 100), // Reste du pourcentage
+                                color: Colors.grey,radius: 50,
+                                title: '${(100 - (totalAudits / (4* DateTime.now().month)) * 100).toStringAsFixed(2)}%', // Affichage du pourcentage
+                                titleStyle: TextStyle(color: Colors.white), // Couleur du texte des pourcentages
+                              ),
+                            ] : [
+                              fl.PieChartSectionData(
+                                value: 100, // En cas de zéro audits
+                                color: Colors.grey,
+                                radius: 50,
+                                title: '0%', // Affichage du pourcentage
+                                titleStyle: TextStyle(color: Colors.white), // Couleur du texte des pourcentages
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Container(
+                                  height: 10,
+                                  width: 10,
+                                  color: Colors.blue,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Les audits qui ont été faites  jusqu à ce mois de ${DateFormat('MMMM').format(DateTime.now())} ',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Container(
+                                  height: 10,
+                                  width: 10,
+                                  color: Colors.grey,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Les audits programmées et non faites',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Affichage de la première PieChart
+            Container(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Text(
+                    'Nombre total d\'audits : $totalAudits',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Stack(
+                    children: [
+                      SizedBox(
+                        height: 200, // Définir une hauteur fixe pour le PieChart
+                        child: fl.PieChart(
+                          fl.PieChartData(
+                            sectionsSpace: 0,
+                            sections: totalAudits > 0 ? [
+                              fl.PieChartSectionData(
+                                value: (totalAudits / (12*4)) * 100, // Audits soldés
+                                color: Colors.green,
+                                radius: 50,
+                                title: '${((totalAudits / (12*4)) * 100).toStringAsFixed(2)}%', // Affichage du pourcentage
+                                titleStyle: TextStyle(color: Colors.white), // Couleur du texte des pourcentages
+                              ),
+                              fl.PieChartSectionData(
+                                value: ((totalAudits - (totalAudits / (12*4))) / totalAudits) * 100, // Audits non soldés
+                                color: Colors.red,
+                                radius: 50,
+                                title: '${(((totalAudits - (totalAudits / (12*4))) / totalAudits) * 100).toStringAsFixed(2)}%', // Affichage du pourcentage
+                                titleStyle: TextStyle(color: Colors.white), // Couleur du texte des pourcentages
+                              ),
+                            ] : [
+                              fl.PieChartSectionData(
+                                value: 100, // En cas de zéro audits
+                                color: Colors.grey,
+                                radius: 50,
+                                title: '0%', // Affichage du pourcentage
+                                titleStyle: TextStyle(color: Colors.white), // Couleur du texte des pourcentages
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Container(
+                                  height: 10,
+                                  width: 10,
+                                  color: Colors.green,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Audits soldés',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Container(
+                                  height: 10,
+                                  width: 10,
+                                  color: Colors.red,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Audits non soldés',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+
+
           ],
         ),
       ),

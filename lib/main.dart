@@ -37,6 +37,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Synctech',
+
+        debugShowCheckedModeBanner: false,
       home: MainActivity(),
       navigatorObservers: [
         FirebaseAnalyticsObserver(analytics: analytics),

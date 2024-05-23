@@ -1,5 +1,9 @@
 {
   "projects": {
-    "default": "application5s"
-  }
+    "default": "application5s",
+    "Y": "application5s"
+  },
+  "targets": {},
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
 }

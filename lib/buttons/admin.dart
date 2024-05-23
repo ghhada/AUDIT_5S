@@ -9,13 +9,13 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  TextEditingController usernameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool passwordVisible = false;
   final databaseReference = FirebaseDatabase.instance.reference();
 
   Future<void> _login() async {
-    String username = usernameController.text;
+    String email = emailController.text;
     String password = passwordController.text;
 
     DataSnapshot snapshot = await databaseReference.child('rapporteurs').get();
@@ -24,7 +24,7 @@ class _LoginState extends State<Login> {
     if (snapshot.exists) {
       Map<dynamic, dynamic> rapporteurs = snapshot.value as Map<dynamic, dynamic>;
       rapporteurs.forEach((key, value) {
-        if (value['nom'] == username && value['motDePasse'] == password) {
+        if (value['email'] == email && value['motDePasse'] == password) {
           userFound = true;
         }
       });
@@ -38,84 +38,190 @@ class _LoginState extends State<Login> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Nom d\'utilisateur ou mot de passe incorrect'),
+          content: Text('Email ou mot de passe incorrect'),
         ),
       );
     }
   }
 
   Future<void> _forgotPassword() async {
+    TextEditingController forgotPasswordController = TextEditingController();
+    bool forgotPasswordVisible = false;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Mot de passe oublié"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: usernameController,
-                decoration: InputDecoration(labelText: 'Nom d\'utilisateur'),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text("Mot de passe oublié"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(labelText: 'Email'),
+                  ),
+                  TextField(
+                    controller: forgotPasswordController,
+                    obscureText: !forgotPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'Nouveau mot de passe',
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          forgotPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            forgotPasswordVisible = !forgotPasswordVisible;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: InputDecoration(labelText: 'Nouveau mot de passe'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                // Récupérer les informations entrées par l'utilisateur
-                String username = usernameController.text;
-                String newPassword = passwordController.text;
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    // Récupérer les informations entrées par l'utilisateur
+                    String email = emailController.text;
+                    String newPassword = forgotPasswordController.text;
 
-                // Vérifier si les informations sont correctes dans la base de données
-                DataSnapshot snapshot = await databaseReference.child('rapporteurs').get();
-                bool userFound = false;
+                    // Vérifier si les informations sont correctes dans la base de données
+                    DataSnapshot snapshot = await databaseReference.child('rapporteurs').get();
+                    bool userFound = false;
 
-                if (snapshot.exists) {
-                  Map<dynamic, dynamic> rapporteurs = snapshot.value as Map<dynamic, dynamic>;
-                  rapporteurs.forEach((key, value) {
-                    if (value['nom'] == username) {
-                      userFound = true;
-                      // Mettre à jour le mot de passe dans la base de données
-                      databaseReference.child('rapporteurs').child(key).update({'motDePasse': newPassword});
+                    if (snapshot.exists) {
+                      Map<dynamic, dynamic> rapporteurs = snapshot.value as Map<dynamic, dynamic>;
+                      rapporteurs.forEach((key, value) {
+                        if (value['email'] == email) {
+                          userFound = true;
+                          // Mettre à jour le mot de passe dans la base de données
+                          databaseReference.child('rapporteurs').child(key).update({'motDePasse': newPassword});
+                        }
+                      });
                     }
-                  });
-                }
 
-                if (userFound) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Mot de passe mis à jour avec succès'),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Nom d\'utilisateur incorrect'),
-                    ),
-                  );
-                }
+                    if (userFound) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Mot de passe mis à jour avec succès'),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Email incorrect'),
+                        ),
+                      );
+                    }
 
-                Navigator.of(context).pop(); // Fermer la boîte de dialogue
-              },
-              child: Text('Enregistrer'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Fermer la boîte de dialogue
-              },
-              child: Text('Annuler'),
-            ),
-          ],
+                    Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                  },
+                  child: Text('Enregistrer'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                  },
+                  child: Text('Annuler'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
 
+  Future<void> _createAccount() async {
+    TextEditingController createEmailController = TextEditingController();
+    TextEditingController createPasswordController = TextEditingController();
+    TextEditingController nameController = TextEditingController();
+    TextEditingController domainController = TextEditingController();
+    bool createAccountPasswordVisible = false;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text("Créer un compte"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(labelText: 'Nom'),
+                  ),
+                  TextField(
+                    controller: createEmailController,
+                    decoration: InputDecoration(labelText: 'Email'),
+                  ),
+                  TextField(
+                    controller: createPasswordController,
+                    obscureText: !createAccountPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'Mot de passe',
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          createAccountPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            createAccountPasswordVisible = !createAccountPasswordVisible;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  TextField(
+                    controller: domainController,
+                    decoration: InputDecoration(labelText: 'Service'),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    String name = nameController.text;
+                    String email = createEmailController.text;
+                    String password = createPasswordController.text;
+                    String domain = domainController.text;
+
+                    // Ajouter l'utilisateur à la base de données
+                    databaseReference.child('rapporteurs').push().set({
+                      'nom': name,
+                      'email': email,
+                      'motDePasse': password,
+                      'domaine': domain
+                    });
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Compte créé avec succès'),
+                      ),
+                    );
+
+                    Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                  },
+                  child: Text('Enregistrer'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                  },
+                  child: Text('Annuler'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,10 +245,10 @@ class _LoginState extends State<Login> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
-                      controller: usernameController,
+                      controller: emailController,
                       decoration: InputDecoration(
-                        labelText: 'Nom d\'utilisateur',
-                        prefixIcon: Icon(Icons.person, color: Colors.orange),
+                        labelText: 'Email',
+                        prefixIcon: Icon(Icons.email, color: Colors.orange),
                       ),
                     ),
                     SizedBox(height: 20.0),
@@ -170,17 +276,22 @@ class _LoginState extends State<Login> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
+                          onPressed: _createAccount,
+                          child: Text('Créer un compte', style: TextStyle(color: Colors.orange)),
+                        ),
+                        TextButton(
                           onPressed: _forgotPassword,
                           child: Text('Mot de passe oublié?', style: TextStyle(color: Colors.orange)),
                         ),
-                        ElevatedButton(
-                          onPressed: _login,
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all(Colors.orange),
-                          ),
-                          child: Text('Se connecter', style: TextStyle(color: Colors.white)),
-                        ),
                       ],
+                    ),
+                    SizedBox(height: 20.0),
+                    ElevatedButton(
+                      onPressed: _login,
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(Colors.orange),
+                      ),
+                      child: Text('Se connecter', style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),

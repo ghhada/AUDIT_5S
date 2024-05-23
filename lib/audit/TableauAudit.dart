@@ -1,4 +1,4 @@
-
+import 'package:emailjs/emailjs.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -39,6 +39,79 @@ class _TableauAuditState extends State<TableauAudit> {
     _actions = List.generate(10, (index) => null);
     _responsables = List.generate(10, (index) => null);
     _datesLimites = List.generate(10, (index) => null);
+  }
+
+  Future<List<String>> getEmails() async {
+    List<String> emailList = [];
+    DatabaseReference ref = FirebaseDatabase.instance.ref().child('rapporteurs');
+
+    DatabaseEvent event = await ref.once();
+    DataSnapshot snapshot = event.snapshot;
+
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic> values = snapshot.value as Map<dynamic, dynamic>;
+      values.forEach((key, value) {
+        emailList.add(value['email']);
+      });
+    }
+
+    return emailList;
+  }
+
+  String formatAuditData() {
+    List<String> actionsList = [];
+    for (int i = 0; i < 10; i++) {
+      // Vérifier si une action, un responsable et une date limite ont été spécifiés
+      if (_actions[i] != null && _actions[i]!.isNotEmpty && _responsables[i] != null && _responsables[i]!.isNotEmpty) {
+        String action = _actions[i]!;
+        String responsable = _responsables[i]!;
+        String dateLimite = _datesLimites[i] != null ? '${_datesLimites[i]!.day}/${_datesLimites[i]!.month}/${_datesLimites[i]!.year}' : 'Non spécifié';
+
+        actionsList.add("Action ${i + 1} : $action\nResponsable ${i + 1} : $responsable\nDate limite ${i + 1} : $dateLimite\n");
+      }
+    }
+
+    double pourcentage = (_checkboxValuesOk.where((value) => value == true).length / _checkboxValuesOk.length) * 100;
+
+    return "Auditeur : ${widget.nomAuditeur}\n" +
+        "Date: ${widget.date}\n" +
+        "Heure: ${widget.heure}\n" +
+        "Ilot: ${widget.ilot}\n" +
+        "Service: ${widget.service}\n" +
+        "Pourcentage: ${pourcentage.toStringAsFixed(2)}%\n" +
+        actionsList.join("\n");
+  }
+
+
+
+  Future<bool> sendEmail() async {
+    List<String> emailList = await getEmails();
+    String formattedAuditData = formatAuditData();
+
+    try {
+      for (String email in emailList) {
+        await EmailJS.send(
+          'service_ua5dkp3',
+          'template_8jhq3ow',
+          {
+            'user_email': email,
+            'user_message': formattedAuditData,
+          },
+          const Options(
+            publicKey: 'jSpioF9IBE7K0psSE',
+            privateKey: 'n3GQP6SzQEfhcjcR0fmP3',
+          ),
+        );
+      }
+      print('SUCCESS!');
+      return true;
+    } catch (error) {
+      if (error is EmailJSResponseStatus) {
+        print('ERROR... ${error.status}: ${error.text}');
+      }
+      print(error.toString());
+      return false;
+    }
   }
 
   @override
@@ -106,6 +179,7 @@ class _TableauAuditState extends State<TableauAudit> {
                 child: ElevatedButton(
                   onPressed: () {
                     _finishAudit();
+                    sendEmail();
                   },
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
@@ -181,55 +255,53 @@ class _TableauAuditState extends State<TableauAudit> {
       ),
       DataCell(
         Container(
-          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-          width: 200,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey),
-          ),
-          child: TextField(
-            decoration: InputDecoration.collapsed(hintText: 'Actions'),
+          width: 250,
+          child: TextFormField(
+            initialValue: _actions[index],
             onChanged: (value) {
               setState(() {
                 _actions[index] = value;
               });
             },
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
           ),
         ),
       ),
       DataCell(
         Container(
-          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-          width: 200,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey),
-          ),
-          child: TextField(
-            decoration: InputDecoration.collapsed(hintText: 'Responsable'),
+          width: 250,
+          child: TextFormField(
+            initialValue: _responsables[index],
             onChanged: (value) {
               setState(() {
                 _responsables[index] = value;
               });
             },
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
           ),
         ),
       ),
       DataCell(
         Container(
-          width: 200,
-          child: InkWell(
-            onTap: () {
-              _selectDate(context, index);
-            },
-            child: Row(
-              children: [
-                Text(
-                  _datesLimites[index] != null ? '${_datesLimites[index]!.day}/${_datesLimites[index]!.month}/${_datesLimites[index]!.year}' : 'Choisir une date',
-                  style: TextStyle(fontSize: 16, color: Colors.blue),
-                ),
-                Icon(Icons.calendar_today, color: Colors.blue),
-              ],
+          width: 250,
+          child: GestureDetector(
+            onTap: () => _selectDate(context, index),
+            child: InputDecorator(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              child: Text(
+                _datesLimites[index] != null
+                    ? '${_datesLimites[index]!.day}/${_datesLimites[index]!.month}/${_datesLimites[index]!.year}'
+                    : 'Sélectionner une date',
+              ),
             ),
           ),
         ),
@@ -306,25 +378,45 @@ class _TableauAuditState extends State<TableauAudit> {
       'total': (_checkboxValuesOk.where((value) => value == true).length / _checkboxValuesOk.length) * 100,
     };
 
-    await _databaseRef.push().set(auditData);
+    try {
+      await _databaseRef.push().set(auditData);
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Succès'),
-          content: Text('Les données ont été envoyées avec succès à la base de données.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Succès'),
+            content: Text('Les données ont été envoyées avec succès à la base de données.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (error) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Erreur'),
+            content: Text('Une erreur s\'est produite lors de l\'envoi des données : $error'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 }
 
