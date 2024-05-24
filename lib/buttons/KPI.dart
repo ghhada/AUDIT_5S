@@ -98,7 +98,7 @@ class Button3Page extends StatelessWidget {
                     backgroundColor: Colors.purple, // Couleur de fond violette pour le bouton du planning annuel
                   ),
                   child: Text(
-                    'Planning Annuel',
+                    'Maturité de site',
                     style: TextStyle(
                       fontSize: 16.0,
                       color: Colors.white,

@@ -91,15 +91,15 @@ class _TableauAuditState extends State<TableauAudit> {
     try {
       for (String email in emailList) {
         await EmailJS.send(
-          'service_ua5dkp3',
-          'template_8jhq3ow',
+          'service_esfhdkg',
+          'template_kxn2d4j',
           {
             'user_email': email,
             'user_message': formattedAuditData,
           },
           const Options(
-            publicKey: 'jSpioF9IBE7K0psSE',
-            privateKey: 'n3GQP6SzQEfhcjcR0fmP3',
+            publicKey: 'OyMR1nIzX5zCoyPZF',
+            privateKey: 'OVKEBMiiRbIisE4nO7vkT',
           ),
         );
       }

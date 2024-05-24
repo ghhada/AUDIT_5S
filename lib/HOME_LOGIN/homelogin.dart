@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'auditeurslist.dart';
 import 'rapporteurslist.dart';
 import 'ilotsetats.dart';
-
+import 'planningPage.dart';
 
 class HomeLogin extends StatefulWidget {
   @override
@@ -64,7 +64,17 @@ class _HomeLoginState extends State<HomeLogin> {
                     MaterialPageRoute(builder: (context) => IlotsEtats()),
                   );
                 },
+              ), SizedBox(height: 20.0),
+              _buildAnimatedButton(
+                label: 'Planning Annuel',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => PlanningAnnuel()),
+                  );
+                },
               ),
+
 
             ],
           ),

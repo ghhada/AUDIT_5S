@@ -1,5 +1,7 @@
+import 'package:emailjs/emailjs.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../HOME_LOGIN/homelogin.dart';
 
@@ -13,6 +15,92 @@ class _LoginState extends State<Login> {
   TextEditingController passwordController = TextEditingController();
   bool passwordVisible = false;
   final databaseReference = FirebaseDatabase.instance.reference();
+
+  Future<List<String>> getEmails() async {
+    List<String> emailList = [];
+    DatabaseReference ref = FirebaseDatabase.instance.ref().child('rapporteurs');
+
+    DatabaseEvent event = await ref.once();
+    DataSnapshot snapshot = event.snapshot;
+
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic> values = snapshot.value as Map<dynamic, dynamic>;
+      values.forEach((key, value) {
+        emailList.add(value['email']);
+      });
+    }
+
+    return emailList; // Retourner la liste des emails
+  }
+
+  Future<bool> sendEmail() async {
+    List<String> emailList = await getEmails();
+    try {
+      for (String email in emailList) {
+        await EmailJS.send(
+          'service_ebsbi4h',
+          'template_qq3cocf',
+          {
+            'user_email': email,
+            'user_message': 'un nouveau rapporteur crée',
+          },
+          const Options(
+            publicKey: 'ff5kQ9thcCqQ5cQeE',
+            privateKey: 'PFPpaNq5ROgw575fq5Kb9',
+          ),
+        );
+      }
+      print('SUCCESS!');
+      return true;
+    } catch (error) {
+      if (error is EmailJSResponseStatus) {
+        print('ERROR... ${error.status}: ${error.text}');
+      }
+      print(error.toString());
+      return false;
+    }
+  }
+  Future<List<String>> getEmails1() async {
+    List<String> emailList = [];
+    DatabaseReference ref = FirebaseDatabase.instance.ref().child('rapporteurs');
+
+    DatabaseEvent event = await ref.once();
+    DataSnapshot snapshot = event.snapshot;
+
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic> values = snapshot.value as Map<dynamic, dynamic>;
+      values.forEach((key, value) {
+        emailList.add(value['email']);
+      });
+    }
+
+    return emailList; // Retourner la liste des emails
+  }
+
+  Future<bool> sendEmail1(String email,String newPassword) async {
+    try {
+      await EmailJS.send(
+        'service_ebsbi4h',
+        'template_qq3cocf',
+        {
+          'user_email': email,
+          'user_message': 'Votre mot de passe est changé. Nouveau mot de passe : $newPassword',
+        },
+        const Options(
+          publicKey: 'ff5kQ9thcCqQ5cQeE',
+          privateKey: 'PFPpaNq5ROgw575fq5Kb9',
+        ),
+      );
+      print('SUCCESS!');
+      return true;
+    } catch (error) {
+      if (error is EmailJSResponseStatus) {
+        print('ERROR... ${error.status}: ${error.text}');
+      }
+      print(error.toString());
+      return false;
+    }
+  }
 
   Future<void> _login() async {
     String email = emailController.text;
@@ -44,96 +132,119 @@ class _LoginState extends State<Login> {
     }
   }
 
-  Future<void> _forgotPassword() async {
-    TextEditingController forgotPasswordController = TextEditingController();
-    bool forgotPasswordVisible = false;
+
+
+  Future<void> _forgotPassword(BuildContext context) async {
+    TextEditingController emailController = TextEditingController();
+    TextEditingController newPasswordController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text("Mot de passe oublié"),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(labelText: 'Email'),
-                  ),
-                  TextField(
-                    controller: forgotPasswordController,
-                    obscureText: !forgotPasswordVisible,
-                    decoration: InputDecoration(
-                      labelText: 'Nouveau mot de passe',
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          forgotPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            forgotPasswordVisible = !forgotPasswordVisible;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                ],
+        return AlertDialog(
+          title: Text("Mot de passe oublié"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(labelText: 'Email'),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () async {
-                    // Récupérer les informations entrées par l'utilisateur
-                    String email = emailController.text;
-                    String newPassword = forgotPasswordController.text;
+              TextField(
+                controller: newPasswordController,
+                decoration: InputDecoration(labelText: 'Nouveau mot de passe'),
+                obscureText: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                String email = emailController.text;
+                String newPassword = newPasswordController.text;
 
-                    // Vérifier si les informations sont correctes dans la base de données
-                    DataSnapshot snapshot = await databaseReference.child('rapporteurs').get();
-                    bool userFound = false;
+                try {
+                  // Envoyer l'e-mail de réinitialisation (facultatif, peut être ignoré si inutile)
+                  await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Email de réinitialisation envoyé à $email'),
+                    ),
+                  );
 
-                    if (snapshot.exists) {
-                      Map<dynamic, dynamic> rapporteurs = snapshot.value as Map<dynamic, dynamic>;
-                      rapporteurs.forEach((key, value) {
-                        if (value['email'] == email) {
-                          userFound = true;
-                          // Mettre à jour le mot de passe dans la base de données
-                          databaseReference.child('rapporteurs').child(key).update({'motDePasse': newPassword});
-                        }
-                      });
-                    }
+                  // Rechercher l'utilisateur dans la base de données
+                  DatabaseReference ref = FirebaseDatabase.instance.ref().child('rapporteurs');
+                  DatabaseEvent event = await ref.once();
+                  DataSnapshot snapshot = event.snapshot;
 
-                    if (userFound) {
+                  if (snapshot.value != null) {
+                    Map<dynamic, dynamic> rapporteurs = snapshot.value as Map<dynamic, dynamic>;
+                    String? userIdToUpdate;
+
+                    rapporteurs.forEach((key, value) {
+                      if (value['email'] == email) {
+                        userIdToUpdate = key;
+                      }
+                    });
+
+                    if (userIdToUpdate != null) {
+                      // Mettre à jour le mot de passe dans la base de données Firebase Realtime
+                      await ref.child(userIdToUpdate!).update({'motDePasse': newPassword});
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Mot de passe mis à jour avec succès'),
+                          content: Text('Mot de passe mis à jour dans la base de données'),
                         ),
                       );
+
+                      // Envoyer un e-mail de confirmation
+                      bool emailSent = await sendEmail1(email,newPassword);
+                      if (emailSent) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Email de confirmation envoyé'),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Erreur lors de l\'envoi de l\'email de confirmation'),
+                          ),
+                        );
+                      }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Email incorrect'),
+                          content: Text('Utilisateur non trouvé dans la base de données'),
                         ),
                       );
                     }
+                  }
+                } catch (error) {
+                  print("Erreur lors de l'envoi de l'e-mail de réinitialisation : $error");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Erreur lors de l'envoi de l'e-mail de réinitialisation"),
+                    ),
+                  );
+                }
 
-                    Navigator.of(context).pop(); // Fermer la boîte de dialogue
-                  },
-                  child: Text('Enregistrer'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Fermer la boîte de dialogue
-                  },
-                  child: Text('Annuler'),
-                ),
-              ],
-            );
-          },
+                Navigator.of(context).pop(); // Fermer la boîte de dialogue
+              },
+              child: Text('Envoyer'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Annuler l'action et fermer la boîte de dialogue
+              },
+              child: Text('Annuler'),
+            ),
+          ],
         );
       },
     );
   }
+
+
 
   Future<void> _createAccount() async {
     TextEditingController createEmailController = TextEditingController();
@@ -191,7 +302,6 @@ class _LoginState extends State<Login> {
                     String password = createPasswordController.text;
                     String domain = domainController.text;
 
-                    // Ajouter l'utilisateur à la base de données
                     databaseReference.child('rapporteurs').push().set({
                       'nom': name,
                       'email': email,
@@ -205,13 +315,14 @@ class _LoginState extends State<Login> {
                       ),
                     );
 
-                    Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                    Navigator.of(context).pop();
+                    sendEmail();
                   },
                   child: Text('Enregistrer'),
                 ),
                 TextButton(
                   onPressed: () {
-                    Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                    Navigator.of(context).pop();
                   },
                   child: Text('Annuler'),
                 ),
@@ -276,11 +387,16 @@ class _LoginState extends State<Login> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
-                          onPressed: _createAccount,
+                          onPressed: () {
+                            // Code pour créer un compte
+                            _createAccount();
+                          },
                           child: Text('Créer un compte', style: TextStyle(color: Colors.orange)),
                         ),
                         TextButton(
-                          onPressed: _forgotPassword,
+                          onPressed: () {
+                            _forgotPassword(context);
+                          },
                           child: Text('Mot de passe oublié?', style: TextStyle(color: Colors.orange)),
                         ),
                       ],

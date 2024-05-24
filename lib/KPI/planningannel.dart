@@ -30,15 +30,18 @@ class _PlanningAnnuelState extends State<PlanningAnnuel> {
     databaseReference.onChildAdded.listen((event) {
       Map<dynamic, dynamic>? values = event.snapshot.value as Map?;
       if (values != null) {
-        final audit = Audit(
-          key: event.snapshot.key!,
-          ilot: values['ilot'] ?? '',
-          date: DateFormat('dd-MM-yyyy').parse(values['date']),
-          total: values['total'] ?? 0,
-        );
-        setState(() {
-          audits.add(audit);
-        });
+        final auditDate = DateFormat('dd-MM-yyyy').parse(values['date']);
+        if (auditDate.year == selectedYear) {
+          final audit = Audit(
+            key: event.snapshot.key!,
+            ilot: values['ilot'] ?? '',
+            date: auditDate,
+            total: values['total'] ?? 0,
+          );
+          setState(() {
+            audits.add(audit);
+          });
+        }
       }
     });
   }
@@ -186,24 +189,25 @@ class _PlanningAnnuelState extends State<PlanningAnnuel> {
   }
 
   Future<void> _selectYear(BuildContext context) async {
-    final pickedYear = await showDatePicker(
+    final pickedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: DateTime(selectedYear),
       firstDate: DateTime(DateTime.now().year - 5),
       lastDate: DateTime(DateTime.now().year + 5),
       initialDatePickerMode: DatePickerMode.year,
     );
 
-    if (pickedYear != null && pickedYear.year != selectedYear) {
+    if (pickedDate != null && pickedDate.year != selectedYear) {
       setState(() {
-        selectedYear = pickedYear.year;
+        selectedYear = pickedDate.year;
+        audits.clear();
+        _getAudits();
       });
     }
   }
 }
 
-
-  class Auditeur {
+class Auditeur {
   late String key;
   String nom;
   String email;
